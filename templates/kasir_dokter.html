@@ -1,0 +1,160 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>Sistem Potong Kupon - Kasir</h2>
+            <a href="{{ url_for('kasir_riwayat') }}" class="btn btn-info">
+                <i class="fas fa-history"></i> Riwayat Pemotongan Kupon
+            </a>
+        </div>
+
+        <!-- Search Section -->
+        <div class="card mb-4">
+            <div class="card-header bg-light">
+                <h5 class="mb-0">Cari Dokter</h5>
+            </div>
+            <div class="card-body">
+                <form method="GET" action="{{ url_for('kasir_dokter') }}" class="row g-3">
+                    <div class="col-md-8">
+                        <input type="text" class="form-control form-control-lg" name="search" 
+                               value="{{ search }}" placeholder="Cari nama dokter atau spesialisasi...">
+                    </div>
+                    <div class="col-md-4">
+                        <button type="submit" class="btn btn-primary btn-lg w-100">
+                            <i class="fas fa-search"></i> Cari
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Dokter List -->
+        {% if dokter_list %}
+        <div class="row">
+            {% for dokter in dokter_list %}
+            <div class="col-lg-6 mb-4">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-header {% if dokter.jumlah_kupon > 0 %}bg-success{% else %}bg-danger{% endif %} text-white">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">Dr. {{ dokter.nama_dokter }}</h5>
+                            <span class="badge bg-light text-dark fs-6">{{ dokter.jumlah_kupon }} Kupon</span>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <p class="mb-2"><strong>Spesialisasi:</strong> <span class="badge bg-info">{{ dokter.spesialisasi }}</span></p>
+                        <p class="mb-2"><strong>No. Kontak:</strong> {{ dokter.nomor_kontak }}</p>
+                        <p class="mb-2"><strong>Alamat Praktik:</strong> {{ dokter.alamat_praktik or '-' }}</p>
+                        {% if dokter.keterangan %}
+                        <p class="mb-0"><strong>Keterangan:</strong> {{ dokter.keterangan }}</p>
+                        {% endif %}
+                    </div>
+                    <div class="card-footer bg-light">
+                        {% if dokter.jumlah_kupon > 0 %}
+                        <button class="btn btn-primary btn-sm w-100" data-bs-toggle="modal" 
+                                data-bs-target="#potonganModal{{ dokter.id }}">
+                            <i class="fas fa-cut"></i> Potong Kupon
+                        </button>
+                        {% else %}
+                        <button class="btn btn-secondary btn-sm w-100" disabled>
+                            <i class="fas fa-ban"></i> Kupon Habis
+                        </button>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Modal Potong Kupon -->
+                <div class="modal fade" id="potonganModal{{ dokter.id }}" tabindex="-1">
+                    <div class="modal-dialog modal-lg">
+                        <div class="modal-content">
+                            <div class="modal-header bg-primary text-white">
+                                <h5 class="modal-title">Potong Kupon - Dr. {{ dokter.nama_dokter }}</h5>
+                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                            </div>
+                            <form method="POST" action="{{ url_for('kasir_potong_kupon', dokter_id=dokter.id) }}">
+                                <div class="modal-body">
+                                    <div class="alert alert-info mb-3">
+                                        <strong>Kupon Tersedia:</strong> <span class="badge bg-success fs-6">{{ dokter.jumlah_kupon }}</span>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label for="nama_dokter{{ dokter.id }}" class="form-label">Nama Dokter</label>
+                                        <input type="text" class="form-control form-control-lg" id="nama_dokter{{ dokter.id }}" 
+                                               value="Dr. {{ dokter.nama_dokter }}" disabled readonly>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label for="jumlah_kupon{{ dokter.id }}" class="form-label">Jumlah Kupon yang Dipotong <span class="text-danger">*</span></label>
+                                        <div class="input-group input-group-lg">
+                                            <button class="btn btn-outline-secondary" type="button" id="minus{{ dokter.id }}">
+                                                <i class="fas fa-minus"></i>
+                                            </button>
+                                            <input type="number" class="form-control text-center" id="jumlah_kupon{{ dokter.id }}" 
+                                                   name="jumlah_kupon" min="1" max="{{ dokter.jumlah_kupon }}" 
+                                                   value="1" required style="font-size: 1.5rem; font-weight: bold;">
+                                            <button class="btn btn-outline-secondary" type="button" id="plus{{ dokter.id }}">
+                                                <i class="fas fa-plus"></i>
+                                            </button>
+                                        </div>
+                                        <small class="text-muted">Maksimal: {{ dokter.jumlah_kupon }} kupon</small>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label for="catatan{{ dokter.id }}" class="form-label">Catatan (Opsional)</label>
+                                        <textarea class="form-control" id="catatan{{ dokter.id }}" 
+                                                  name="catatan" rows="3" placeholder="Masukkan catatan pemeriksaan atau keterangan lainnya..."></textarea>
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                                    <button type="submit" class="btn btn-success btn-lg">
+                                        <i class="fas fa-check-circle"></i> Potong Kupon
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Script untuk increment/decrement -->
+                <script>
+                    document.getElementById('minus{{ dokter.id }}').addEventListener('click', function() {
+                        var input = document.getElementById('jumlah_kupon{{ dokter.id }}');
+                        if (input.value > 1) input.value--;
+                    });
+                    document.getElementById('plus{{ dokter.id }}').addEventListener('click', function() {
+                        var input = document.getElementById('jumlah_kupon{{ dokter.id }}');
+                        if (input.value < {{ dokter.jumlah_kupon }}) input.value++;
+                    });
+                </script>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="alert alert-warning text-center" role="alert">
+            <i class="fas fa-search"></i> 
+            {% if search %}
+                <strong>Tidak ditemukan</strong> dokter dengan pencarian "{{ search }}"
+            {% else %}
+                <strong>Tidak ada dokter</strong> yang terdaftar atau aktif
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+.card {
+    transition: all 0.3s ease;
+    border: none;
+}
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 16px rgba(0,0,0,0.15) !important;
+}
+.input-group-lg .form-control {
+    height: 3rem;
+}
+</style>
+{% endblock %}

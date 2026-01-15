@@ -1,0 +1,163 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">
+                    {% if user.role == 'approval1' %}
+                        Approval 1 Dashboard
+                    {% elif user.role == 'approval2' %}
+                        Approval 2 Dashboard
+                    {% else %}
+                        Admin Dashboard
+                    {% endif %}
+                </h4>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>No</th>
+                                <th>Nama Lengkap</th>
+                                <th>Departemen</th>
+                                <th>No. ID Karyawan</th>
+                                <th>Status</th>
+                                <th>Approval 1</th>
+                                <th>Approval 2</th>
+                                <th>Tanggal Daftar</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for pendaftaran in pendaftaran_list %}
+                            <tr>
+                                <td>{{ loop.index }}</td>
+                                <td>{{ pendaftaran.nama_lengkap }}</td>
+                                <td>{{ pendaftaran.asal_departemen }}</td>
+                                <td>{{ pendaftaran.no_id_karyawan }}</td>
+                                <td>
+                                    {% if pendaftaran.status == 'pending' %}
+                                        <span class="badge bg-warning">Pending</span>
+                                    {% elif pendaftaran.status == 'approved1' %}
+                                        <span class="badge bg-info">Approved 1</span>
+                                    {% elif pendaftaran.status == 'approved2' %}
+                                        <span class="badge bg-success">Approved 2</span>
+                                    {% elif pendaftaran.status == 'rejected' %}
+                                        <span class="badge bg-danger">Rejected</span>
+                                    {% elif pendaftaran.status == 'cancelled' %}
+                                        <span class="badge bg-secondary">Cancelled</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if pendaftaran.approval1_at %}
+                                        <small class="text-success">✓ {{ pendaftaran.approval1_at.strftime('%d/%m') }}</small>
+                                    {% else %}
+                                        <small class="text-muted">-</small>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if pendaftaran.approval2_at %}
+                                        <small class="text-success">✓ {{ pendaftaran.approval2_at.strftime('%d/%m') }}</small>
+                                    {% else %}
+                                        <small class="text-muted">-</small>
+                                    {% endif %}
+                                </td>
+                                <td>{{ pendaftaran.created_at.strftime('%d/%m/%Y %H:%M') }}</td>
+                                <td>
+                                    <a href="{{ url_for('detail_pendaftaran', pendaftaran_id=pendaftaran.id) }}" class="btn btn-sm btn-info">
+                                        <i class="bi bi-eye"></i> Lihat
+                                    </a>
+                                    {% if (user.role == 'approval1' and pendaftaran.status == 'pending') or 
+                                          (user.role == 'approval2' and pendaftaran.status == 'approved1') %}
+                                    <button class="btn btn-sm btn-primary" data-bs-toggle="modal" 
+                                            data-bs-target="#approvalModal{{ pendaftaran.id }}">
+                                        Review
+                                    </button>
+                                    {% endif %}
+                                    
+                                    <!-- Modal untuk approval -->
+                                    <div class="modal fade" id="approvalModal{{ pendaftaran.id }}" tabindex="-1">
+                                        <div class="modal-dialog">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title">Review Pendaftaran</h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                </div>
+                                                <form method="POST" action="{{ url_for('approve', id=pendaftaran.id) }}">
+                                                    <div class="modal-body">
+                                                        <p><strong>Nama:</strong> {{ pendaftaran.nama_lengkap }}</p>
+                                                        <p><strong>Departemen:</strong> {{ pendaftaran.asal_departemen }}</p>
+                                                        <p><strong>Email:</strong> {{ pendaftaran.alamat_email }}</p>
+                                                        
+                                                        <div class="mb-3">
+                                                            <label class="form-label"><strong>File yang Diupload:</strong></label>
+                                                            <div class="list-group">
+                                                                {% if pendaftaran.upload_ktp %}
+                                                                <a href="{{ url_for('download_file', pendaftaran_id=pendaftaran.id, file_type='ktp') }}" class="list-group-item list-group-item-action">
+                                                                    <i class="bi bi-file-earmark-pdf"></i> KTP
+                                                                    <span class="badge bg-primary float-end">Download</span>
+                                                                </a>
+                                                                {% endif %}
+                                                                {% if pendaftaran.upload_id_karyawan %}
+                                                                <a href="{{ url_for('download_file', pendaftaran_id=pendaftaran.id, file_type='id_karyawan') }}" class="list-group-item list-group-item-action">
+                                                                    <i class="bi bi-file-earmark-pdf"></i> ID Karyawan
+                                                                    <span class="badge bg-primary float-end">Download</span>
+                                                                </a>
+                                                                {% endif %}
+                                                                {% if pendaftaran.upload_pas_foto %}
+                                                                <a href="{{ url_for('download_file', pendaftaran_id=pendaftaran.id, file_type='pas_foto') }}" class="list-group-item list-group-item-action">
+                                                                    <i class="bi bi-file-earmark-image"></i> Pas Foto
+                                                                    <span class="badge bg-primary float-end">Download</span>
+                                                                </a>
+                                                                {% endif %}
+                                                                {% if pendaftaran.upload_buku_tabungan %}
+                                                                <a href="{{ url_for('download_file', pendaftaran_id=pendaftaran.id, file_type='buku_tabungan') }}" class="list-group-item list-group-item-action">
+                                                                    <i class="bi bi-file-earmark-pdf"></i> Buku Tabungan
+                                                                    <span class="badge bg-primary float-end">Download</span>
+                                                                </a>
+                                                                {% endif %}
+                                                            </div>
+                                                        </div>
+                                                        
+                                                        <div class="mb-3">
+                                                            <label class="form-label">Catatan:</label>
+                                                            <textarea class="form-control" name="notes" rows="3"></textarea>
+                                                        </div>
+                                                        
+                                                        <div class="form-check">
+                                                            <input class="form-check-input" type="radio" name="action" 
+                                                                   id="approve{{ pendaftaran.id }}" value="approve" required>
+                                                            <label class="form-check-label" for="approve{{ pendaftaran.id }}">
+                                                                Setujui
+                                                            </label>
+                                                        </div>
+                                                        <div class="form-check">
+                                                            <input class="form-check-input" type="radio" name="action" 
+                                                                   id="reject{{ pendaftaran.id }}" value="reject" required>
+                                                            <label class="form-check-label" for="reject{{ pendaftaran.id }}">
+                                                                Tolak
+                                                            </label>
+                                                        </div>
+                                                    </div>
+                                                    <div class="modal-footer">
+                                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                                                        <button type="submit" class="btn btn-primary">Submit</button>
+                                                    </div>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

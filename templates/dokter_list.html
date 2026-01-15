@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>Layanan Dokter Koperasi</h2>
+            {% if current_user.is_authenticated %}
+            <a href="{{ url_for('riwayat_kupon') }}" class="btn btn-info">
+                <i class="fas fa-history"></i> Riwayat Penggunaan Kupon
+            </a>
+            {% endif %}
+        </div>
+
+        {% if dokter_list %}
+        <div class="row">
+            {% for dokter in dokter_list %}
+            <div class="col-md-6 mb-4">
+                <div class="card h-100">
+                    <div class="card-header {% if dokter.jumlah_kupon > 0 %}bg-success{% else %}bg-danger{% endif %} text-white">
+                        <h5 class="mb-0">Dr. {{ dokter.nama_dokter }}</h5>
+                    </div>
+                    <div class="card-body">
+                        <p><strong>Spesialisasi:</strong> {{ dokter.spesialisasi }}</p>
+                        <p><strong>No. Kontak:</strong> {{ dokter.nomor_kontak }}</p>
+                        <p><strong>Alamat Praktik:</strong> {{ dokter.alamat_praktik or '-' }}</p>
+                        {% if dokter.keterangan %}
+                        <p><strong>Keterangan:</strong> {{ dokter.keterangan }}</p>
+                        {% endif %}
+                        
+                        <hr>
+                        
+                        <div class="alert {% if dokter.jumlah_kupon > 0 %}alert-success{% else %}alert-danger{% endif %} mb-0">
+                            <h6 class="mb-2">Kupon Tersedia: <span class="badge bg-light text-dark">{{ dokter.jumlah_kupon }}</span></h6>
+                        </div>
+                    </div>
+                    <div class="card-footer">
+                        {% if current_user.is_authenticated %}
+                            {% if dokter.jumlah_kupon > 0 %}
+                            <button class="btn btn-primary btn-sm" data-bs-toggle="modal" 
+                                    data-bs-target="#potonganModal{{ dokter.id }}">
+                                <i class="fas fa-scissors"></i> Potong Kupon
+                            </button>
+                            {% else %}
+                            <button class="btn btn-secondary btn-sm" disabled>
+                                Kupon Habis
+                            </button>
+                            {% endif %}
+                        {% else %}
+                        <a href="{{ url_for('login') }}" class="btn btn-warning btn-sm">Login untuk Menggunakan</a>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Modal Potong Kupon -->
+                <div class="modal fade" id="potonganModal{{ dokter.id }}" tabindex="-1">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">Potong Kupon - Dr. {{ dokter.nama_dokter }}</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <form method="POST" action="{{ url_for('potong_kupon', dokter_id=dokter.id) }}">
+                                <div class="modal-body">
+                                    <p><strong>Kupon Tersedia:</strong> {{ dokter.jumlah_kupon }}</p>
+                                    
+                                    <div class="mb-3">
+                                        <label for="jumlah_kupon{{ dokter.id }}" class="form-label">Jumlah Kupon yang Digunakan</label>
+                                        <input type="number" class="form-control" id="jumlah_kupon{{ dokter.id }}" 
+                                               name="jumlah_kupon" min="1" max="{{ dokter.jumlah_kupon }}" 
+                                               value="1" required>
+                                        <small class="text-muted">Maksimal: {{ dokter.jumlah_kupon }} kupon</small>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label for="catatan{{ dokter.id }}" class="form-label">Catatan (Opsional)</label>
+                                        <textarea class="form-control" id="catatan{{ dokter.id }}" 
+                                                  name="catatan" rows="3" placeholder="Masukkan catatan pemeriksaan..."></textarea>
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-check"></i> Potong Kupon
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="alert alert-info" role="alert">
+            <i class="fas fa-info-circle"></i> Belum ada dokter yang terdaftar.
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+.card {
+    transition: transform 0.2s;
+}
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+</style>
+{% endblock %}

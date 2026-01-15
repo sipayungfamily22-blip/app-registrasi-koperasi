@@ -1,0 +1,276 @@
+📋 CHECKLIST: Waitress Production Setup
+
+✅ COMPLETED SETUP:
+
+1. ✓ Created Entry Point
+   - wsgi.py (Waitress entry point)
+
+2. ✓ Production Configuration
+   - config.py (updated with environment management)
+   - .env.production (with template variables)
+   - requirements.txt (added waitress==2.1.2)
+
+3. ✓ Batch Scripts
+   - run_production.bat (main server launcher)
+   - backup_production.bat (database/uploads backup)
+   - setup_production.bat (initial setup)
+
+4. ✓ Documentation
+   - QUICKSTART.md (3-step quick guide)
+   - PRODUCTION_SETUP.md (comprehensive guide)
+   - DEPLOYMENT_CHECKLIST.txt (this file)
+
+5. ✓ Directory Structure
+   - logs/ (for application logs)
+   - static/uploads/ktp/
+   - static/uploads/pas_foto/
+   - static/uploads/id_karyawan/
+   - static/uploads/buku_tabungan/
+
+6. ✓ Packages Installed
+   - Waitress 2.1.2 (WSGI application server)
+   - python-dotenv (environment variable management)
+
+═══════════════════════════════════════════════════════════════
+
+📝 CONFIGURATION TASKS (DO THIS BEFORE RUNNING):
+
+□ Step 1: Configure .env.production
+  Location: c:\Users\agung.daniel\Project PBO\aplikasi formulir pendaftaran\.env.production
+  
+  Required Changes:
+  - SECRET_KEY: Generate random key (min 32 chars)
+    • Windows: python -c "import secrets; print(secrets.token_hex(32))"
+    • Copy-paste result to .env.production
+  
+  - MAIL_USERNAME: Your Gmail email
+    • Example: your-email@gmail.com
+  
+  - MAIL_PASSWORD: Gmail App-Specific Password
+    • Get from: https://myaccount.google.com/apppasswords
+    • Not regular Gmail password!
+
+□ Step 2: Run Setup Script
+  Command: setup_production.bat
+  This will:
+  - Create all needed directories
+  - Activate virtual environment
+  - Install dependencies
+  - Generate production config
+
+□ Step 3: Initialize Database (if needed)
+  Command: python -c "from koperasi_apps.app import app, db; app.app_context().push(); db.create_all()"
+
+═══════════════════════════════════════════════════════════════
+
+🚀 LAUNCH PRODUCTION SERVER:
+
+Run: run_production.bat
+
+Expected Output:
+```
+========================================
+Aplikasi Koperasi - Production Server
+========================================
+
+Waitress Production Server dimulai...
+Akses aplikasi di: http://localhost:8000
+
+Untuk menghentikan: Tekan Ctrl+C
+========================================
+```
+
+Access Application: http://localhost:8000
+
+═══════════════════════════════════════════════════════════════
+
+🔐 SECURITY VERIFICATIONS:
+
+Before going live, verify:
+
+□ SECRET_KEY is unique and random (min 32 chars)
+□ FLASK_DEBUG = 0 in .env.production
+□ Database backup created (backup_production.bat)
+□ Upload directory has write permissions
+□ Mail credentials are valid
+□ HTTPS/SSL certificate ready (if using reverse proxy)
+□ Log file permissions set correctly
+□ Firewall allows port 8000 (if needed)
+
+═══════════════════════════════════════════════════════════════
+
+📊 PERFORMANCE TUNING:
+
+Default: --threads=4 (suitable for 30-50 concurrent users)
+
+For Higher Traffic (edit run_production.bat):
+- 50-100 users: --threads=8
+- 100-200 users: --threads=16
+- 200+ users: Consider Nginx load balancing
+
+Memory Usage:
+- Base: ~50-100 MB
+- Per thread: ~20-30 MB
+- Calculate: 100 + (threads × 25)
+
+═══════════════════════════════════════════════════════════════
+
+🔧 TROUBLESHOOTING QUICK REFERENCE:
+
+Issue: Port 8000 already in use
+Fix: netstat -ano | findstr :8000
+     taskkill /PID <PID> /F
+
+Issue: Permission denied on file upload
+Fix: icacls "static\uploads" /grant Everyone:F /T
+
+Issue: Database locked
+Fix: del "koperasi apps\instance\koperasi.db"
+     (will recreate on next startup)
+
+Issue: Waitress not found
+Fix: python -m pip install waitress
+
+Issue: .env.production not loading
+Fix: Verify python-dotenv installed: pip install python-dotenv
+     Verify .env.production in correct location (root folder)
+
+═══════════════════════════════════════════════════════════════
+
+📈 MONITORING:
+
+Real-time logs:
+- Get-Content logs\app.log -Wait (PowerShell)
+- tail -f logs\app.log (Git Bash)
+
+Check server status:
+- curl http://localhost:8000
+- Or open browser: http://localhost:8000
+
+Monitor resources:
+- tasklist | findstr python (process list)
+- Performance Monitor (built-in Windows utility)
+
+═══════════════════════════════════════════════════════════════
+
+🛑 STOPPING SERVER:
+
+Option 1: In console where server is running
+- Press: Ctrl+C
+
+Option 2: In another terminal/PowerShell
+- Command: taskkill /IM python.exe /F
+- Or: Stop-Process -Name python -Force
+
+Option 3: Windows Task Manager
+- Find python.exe process
+- Right-click → End Task
+
+═══════════════════════════════════════════════════════════════
+
+💾 BACKUP STRATEGY:
+
+Automatic Backup:
+- Run: backup_production.bat
+- Creates: backups\backup_YYYYMMDD_HHMMSS\
+- Includes: database.db, uploads/, config files
+
+Recommended Schedule:
+- Before any updates: backup_production.bat
+- Daily: Automate with Windows Task Scheduler
+- Weekly: Manual backup verification
+- Monthly: Archive old backups to external drive
+
+Backup Contents:
+- koperasi.db (SQLite database)
+- uploads/ (user files)
+- .env.production (configuration)
+- config.py (backup of config)
+
+═══════════════════════════════════════════════════════════════
+
+🌐 HTTPS/NGINX SETUP (Optional):
+
+To setup HTTPS with domain:
+
+1. Install Nginx on Windows
+2. Configure reverse proxy to localhost:8000
+3. Install SSL certificate (Let's Encrypt free)
+4. Access via: https://your-domain.com
+
+Documentation: See PRODUCTION_SETUP.md Nginx section
+
+═══════════════════════════════════════════════════════════════
+
+✨ FILE STRUCTURE AFTER SETUP:
+
+aplikasi-formulir-pendaftaran/
+├── koperasi apps/
+│   ├── app.py
+│   ├── wsgi.py ←  BARU
+│   ├── config.py ←  UPDATED
+│   ├── models.py
+│   ├── database.py
+│   ├── requirements.txt ←  UPDATED
+│   └── instance/
+│       └── koperasi.db
+├── templates/
+├── static/
+│   ├── style.css
+│   └── uploads/
+│       ├── ktp/
+│       ├── pas_foto/
+│       ├── id_karyawan/
+│       └── buku_tabungan/
+├── logs/ ←  BARU (empty, created by script)
+├── backups/ ←  AUTO-CREATED
+│
+├── .env.production ←  BARU (EDIT THIS)
+├── run_production.bat ←  BARU
+├── backup_production.bat ←  BARU
+├── setup_production.bat ←  BARU
+├── QUICKSTART.md ←  BARU
+├── PRODUCTION_SETUP.md ←  BARU
+├── DEPLOYMENT_CHECKLIST.txt ←  THIS FILE
+│
+└── .venv/ (Python virtual environment)
+
+═══════════════════════════════════════════════════════════════
+
+📚 DOCUMENTATION REFERENCES:
+
+Quick Start (3 steps):
+→ Read: QUICKSTART.md
+
+Comprehensive Guide:
+→ Read: PRODUCTION_SETUP.md
+
+Configuration Details:
+→ See: .env.production (with comments)
+
+Application Config:
+→ See: koperasi apps/config.py (ProductionConfig class)
+
+═══════════════════════════════════════════════════════════════
+
+✅ READY FOR PRODUCTION!
+
+Status: All setup completed
+Server: Waitress 2.1.2 (production-ready)
+Configuration: Environment-based (.env.production)
+Documentation: Complete
+Backup: Automated available
+
+Next: Edit .env.production → Run setup_production.bat → Run run_production.bat
+
+═══════════════════════════════════════════════════════════════
+
+Support Files Created:
+• QUICKSTART.md - Get started in 3 steps
+• PRODUCTION_SETUP.md - Full documentation
+• DEPLOYMENT_CHECKLIST.txt - This file
+
+---
+Generated: 2026-01-13
+Version: 1.0.0
+Status: Production Ready ✓

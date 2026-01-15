@@ -1,0 +1,199 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-12">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">Detail Pendaftaran</h4>
+                    <a href="javascript:history.back()" class="btn btn-light btn-sm">Kembali</a>
+                </div>
+            </div>
+            <div class="card-body">
+                <!-- Status Badge -->
+                <div class="mb-4">
+                    <strong>Status Pendaftaran:</strong>
+                    {% if pendaftaran.status == 'pending' %}
+                        <span class="badge bg-warning">Pending</span>
+                    {% elif pendaftaran.status == 'approved1' %}
+                        <span class="badge bg-info">Approved 1</span>
+                    {% elif pendaftaran.status == 'approved2' %}
+                        <span class="badge bg-success">Approved 2</span>
+                    {% elif pendaftaran.status == 'rejected' %}
+                        <span class="badge bg-danger">Rejected</span>
+                    {% elif pendaftaran.status == 'cancelled' %}
+                        <span class="badge bg-secondary">Cancelled</span>
+                    {% endif %}
+                </div>
+
+                <!-- Data Pribadi -->
+                <div class="mb-4">
+                    <h5 class="border-bottom pb-2">Data Pribadi</h5>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <p><strong>Nama Lengkap:</strong><br>{{ pendaftaran.nama_lengkap }}</p>
+                        </div>
+                        <div class="col-md-3">
+                            <p><strong>Tempat Lahir:</strong><br>{{ pendaftaran.tempat_lahir }}</p>
+                        </div>
+                        <div class="col-md-3">
+                            <p><strong>Tanggal Lahir:</strong><br>{{ pendaftaran.tanggal_lahir.strftime('%d/%m/%Y') }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Alamat Rumah:</strong><br>{{ pendaftaran.alamat_rumah }}</p>
+                        </div>
+                        <div class="col-md-3">
+                            <p><strong>Nomor HP:</strong><br>{{ pendaftaran.nomor_handphone }}</p>
+                        </div>
+                        <div class="col-md-3">
+                            <p><strong>Email:</strong><br>{{ pendaftaran.alamat_email }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Nomor KTP:</strong><br>{{ pendaftaran.nomor_ktp }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>No ID Karyawan:</strong><br>{{ pendaftaran.no_id_karyawan }}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Data Karyawan -->
+                <div class="mb-4">
+                    <h5 class="border-bottom pb-2">Data Karyawan</h5>
+                    <p><strong>Asal Departemen:</strong><br>{{ pendaftaran.asal_departemen }}</p>
+                </div>
+
+                <!-- Data Rekening -->
+                <div class="mb-4">
+                    <h5 class="border-bottom pb-2">Data Rekening</h5>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <p><strong>Nomor Rekening:</strong><br>{{ pendaftaran.nomor_rekening }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Nama Bank:</strong><br>{{ pendaftaran.nama_bank }}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- File Upload -->
+                <div class="mb-4">
+                    <h5 class="border-bottom pb-2">File yang Diupload</h5>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h6 class="card-title">KTP</h6>
+                                    {% if pendaftaran.upload_ktp %}
+                                        <p class="text-muted small">{{ pendaftaran.upload_ktp }}</p>
+                                        <a href="{{ url_for('download_file', pendaftaran_id=pendaftaran.id, file_type='ktp') }}" class="btn btn-sm btn-primary">
+                                            <i class="bi bi-download"></i> Download
+                                        </a>
+                                    {% else %}
+                                        <p class="text-muted">Tidak ada file</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h6 class="card-title">ID Karyawan</h6>
+                                    {% if pendaftaran.upload_id_karyawan %}
+                                        <p class="text-muted small">{{ pendaftaran.upload_id_karyawan }}</p>
+                                        <a href="{{ url_for('download_file', pendaftaran_id=pendaftaran.id, file_type='id_karyawan') }}" class="btn btn-sm btn-primary">
+                                            <i class="bi bi-download"></i> Download
+                                        </a>
+                                    {% else %}
+                                        <p class="text-muted">Tidak ada file</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h6 class="card-title">Pas Foto</h6>
+                                    {% if pendaftaran.upload_pas_foto %}
+                                        <p class="text-muted small">{{ pendaftaran.upload_pas_foto }}</p>
+                                        <a href="{{ url_for('download_file', pendaftaran_id=pendaftaran.id, file_type='pas_foto') }}" class="btn btn-sm btn-primary">
+                                            <i class="bi bi-download"></i> Download
+                                        </a>
+                                    {% else %}
+                                        <p class="text-muted">Tidak ada file</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h6 class="card-title">Buku Tabungan / Bukti Mobile Rekening</h6>
+                                    {% if pendaftaran.upload_buku_tabungan %}
+                                        <p class="text-muted small">{{ pendaftaran.upload_buku_tabungan }}</p>
+                                        <a href="{{ url_for('download_file', pendaftaran_id=pendaftaran.id, file_type='buku_tabungan') }}" class="btn btn-sm btn-primary">
+                                            <i class="bi bi-download"></i> Download
+                                        </a>
+                                    {% else %}
+                                        <p class="text-muted">Tidak ada file</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Approval Info -->
+                <div class="mb-4">
+                    <h5 class="border-bottom pb-2">Informasi Approval</h5>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <p><strong>Approval 1:</strong><br>
+                            {% if pendaftaran.approval1_at %}
+                                <span class="text-success">✓ Disetujui pada {{ pendaftaran.approval1_at.strftime('%d/%m/%Y %H:%M') }}</span>
+                                {% if pendaftaran.approval1_user %}
+                                    <br><small>Oleh: {{ pendaftaran.approval1_user.email }}</small>
+                                {% endif %}
+                                {% if pendaftaran.approval1_notes %}
+                                    <br><small class="text-muted">Catatan: {{ pendaftaran.approval1_notes }}</small>
+                                {% endif %}
+                            {% else %}
+                                <span class="text-muted">Belum disetujui</span>
+                            {% endif %}
+                            </p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Approval 2:</strong><br>
+                            {% if pendaftaran.approval2_at %}
+                                <span class="text-success">✓ Disetujui pada {{ pendaftaran.approval2_at.strftime('%d/%m/%Y %H:%M') }}</span>
+                                {% if pendaftaran.approval2_user %}
+                                    <br><small>Oleh: {{ pendaftaran.approval2_user.email }}</small>
+                                {% endif %}
+                                {% if pendaftaran.approval2_notes %}
+                                    <br><small class="text-muted">Catatan: {{ pendaftaran.approval2_notes }}</small>
+                                {% endif %}
+                            {% else %}
+                                <span class="text-muted">Belum disetujui</span>
+                            {% endif %}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Timestamps -->
+                <div class="mb-4">
+                    <h5 class="border-bottom pb-2">Informasi Waktu</h5>
+                    <p>
+                        <strong>Tanggal Pendaftaran:</strong> {{ pendaftaran.created_at.strftime('%d/%m/%Y %H:%M') }}<br>
+                        <strong>Terakhir Diubah:</strong> {{ pendaftaran.updated_at.strftime('%d/%m/%Y %H:%M') }}
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

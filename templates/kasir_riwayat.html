@@ -1,0 +1,162 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>Riwayat Pemotongan Kupon</h2>
+        <div class="btn-group" role="group">
+            <a href="{{ url_for('kasir_dokter') }}" class="btn btn-primary">
+                <i class="fas fa-arrow-left"></i> Kembali
+            </a>
+            <a href="{{ url_for('kasir_export_riwayat', search=search, dokter_id=dokter_id) }}" class="btn btn-success">
+                <i class="fas fa-download"></i> Export CSV
+            </a>
+        </div>
+        <!-- Filter Section -->
+        <div class="card mb-4">
+            <div class="card-header bg-light">
+                <h5 class="mb-0">Filter Riwayat</h5>
+            </div>
+            <div class="card-body">
+                <form method="GET" action="{{ url_for('kasir_riwayat') }}" class="row g-3">
+                    <div class="col-md-6">
+                        <label for="search" class="form-label">Cari Catatan atau Keterangan</label>
+                        <input type="text" class="form-control" id="search" name="search" 
+                               value="{{ search }}" placeholder="Masukkan catatan...">
+                    </div>
+                    <div class="col-md-4">
+                        <label for="dokter_id" class="form-label">Filter Dokter</label>
+                        <select class="form-select" id="dokter_id" name="dokter_id">
+                            <option value="">Semua Dokter</option>
+                            {% for dokter in dokter_options %}
+                            <option value="{{ dokter.id }}" {% if dokter_id|int == dokter.id %}selected{% endif %}>
+                                Dr. {{ dokter.nama_dokter }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">&nbsp;</label>
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="fas fa-filter"></i> Filter
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Statistics -->
+        {% if riwayat %}
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="card text-center bg-primary text-white">
+                    <div class="card-body">
+                        <h5 class="card-title">Total Pemotongan</h5>
+                        <h2>{{ riwayat|length }}</h2>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-center bg-success text-white">
+                    <div class="card-body">
+                        <h5 class="card-title">Total Kupon</h5>
+                        <h2>{{ total_kupon }}</h2>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-center bg-info text-white">
+                    <div class="card-body">
+                        <h5 class="card-title">Kategori Transaksi</h5>
+                        <h2>{{ riwayat|length }}</h2>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-center bg-warning text-dark">
+                    <div class="card-body">
+                        <h5 class="card-title">Dokter Dikunjungi</h5>
+                        <h2>{{ riwayat|map(attribute='dokter_id')|unique|list|length }}</h2>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Riwayat Table -->
+        {% if riwayat %}
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Detail Pemotongan Kupon</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover table-striped">
+                        <thead>
+                            <tr>
+                                <th>No</th>
+                                <th>Nama Dokter</th>
+                                <th>Spesialisasi</th>
+                                <th>Jumlah Kupon</th>
+                                <th>Tanggal Potong</th>
+                                <th>Catatan</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in riwayat %}
+                            <tr>
+                                <td>{{ loop.index }}</td>
+                                <td>Dr. {{ item.dokter.nama_dokter }}</td>
+                                <td>
+                                    <span class="badge bg-info">{{ item.dokter.spesialisasi }}</span>
+                                </td>
+                                <td>
+                                    <span class="badge bg-success fs-6">{{ item.jumlah_kupon_digunakan }}</span>
+                                </td>
+                                <td>{{ item.tanggal_penggunaan.strftime('%d/%m/%Y %H:%M') }}</td>
+                                <td>
+                                    {% if item.catatan %}
+                                        <small class="text-muted">{{ item.catatan[:50] }}{% if item.catatan|length > 50 %}...{% endif %}</small>
+                                    {% else %}
+                                        <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Export Option -->
+        <div class="mt-4">
+            <button class="btn btn-success" onclick="window.print()">
+                <i class="fas fa-print"></i> Cetak / Export PDF
+            </button>
+        </div>
+        {% else %}
+        <div class="alert alert-info" role="alert">
+            <i class="fas fa-info-circle"></i> 
+            {% if search or dokter_id %}
+                Tidak ada data pemotongan kupon dengan filter yang dipilih.
+            {% else %}
+                Belum ada riwayat pemotongan kupon.
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+@media print {
+    .btn-primary, .btn, .card-header, .navbar, footer, .d-flex {
+        display: none !important;
+    }
+    .table {
+        font-size: 12px;
+    }
+}
+</style>
+{% endblock %}

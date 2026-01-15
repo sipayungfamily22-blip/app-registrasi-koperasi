@@ -1,0 +1,277 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>Laporan Pendaftaran Calon Anggota</h2>
+            <a href="{{ url_for('export_report', status=status_filter, approval1=approval1_filter, approval2=approval2_filter, search=search, date_from=date_from, date_to=date_to) }}" class="btn btn-success" id="exportBtn">
+                <i class="fas fa-download"></i> Export ke CSV
+            </a>
+        </div>
+        
+        <!-- Statistics Cards -->
+        <div class="row mb-4">
+            <div class="col-md-2">
+                <div class="card text-center bg-primary text-white">
+                    <div class="card-body">
+                        <h5 class="card-title">Total</h5>
+                        <h3>{{ stats.total }}</h3>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="card text-center bg-warning text-dark">
+                    <div class="card-body">
+                        <h5 class="card-title">Pending</h5>
+                        <h3>{{ stats.pending }}</h3>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="card text-center bg-info text-white">
+                    <div class="card-body">
+                        <h5 class="card-title">Approval 1</h5>
+                        <h3>{{ stats.approved1 }}</h3>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="card text-center" style="background-color: #17a2b8; color: white;">
+                    <div class="card-body">
+                        <h5 class="card-title">Approval 2</h5>
+                        <h3>{{ stats.approved2 }}</h3>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="card text-center bg-success text-white">
+                    <div class="card-body">
+                        <h5 class="card-title">Final Approve</h5>
+                        <h3>{{ stats.final_approved }}</h3>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="card text-center bg-danger text-white">
+                    <div class="card-body">
+                        <h5 class="card-title">Rejected</h5>
+                        <h3>{{ stats.rejected }}</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filter Section -->
+        <div class="card mb-4">
+            <div class="card-header bg-light">
+                <h5 class="mb-0">Filter dan Pencarian</h5>
+            </div>
+            <div class="card-body">
+                <form method="GET" action="{{ url_for('report') }}" class="row g-3">
+                    <div class="col-md-3">
+                        <label for="search" class="form-label">Cari (Nama, KTP, ID Karyawan, Email)</label>
+                        <input type="text" class="form-control" id="search" name="search" 
+                               value="{{ search }}" placeholder="Masukkan keyword...">
+                    </div>
+                    <div class="col-md-2">
+                        <label for="status" class="form-label">Status</label>
+                        <select class="form-select" id="status" name="status">
+                            <option value="all" {% if status_filter == 'all' %}selected{% endif %}>Semua Status</option>
+                            <option value="pending" {% if status_filter == 'pending' %}selected{% endif %}>Pending</option>
+                            <option value="approved1" {% if status_filter == 'approved1' %}selected{% endif %}>Approved 1</option>
+                            <option value="approved2" {% if status_filter == 'approved2' %}selected{% endif %}>Approved 2</option>
+                            <option value="rejected" {% if status_filter == 'rejected' %}selected{% endif %}>Rejected</option>
+                        </select>
+                    </div>
+                    <div class="col-md-1">
+                        <label for="approval1" class="form-label">Approval 1</label>
+                        <select class="form-select" id="approval1" name="approval1">
+                            <option value="all" {% if approval1_filter == 'all' %}selected{% endif %}>Semua</option>
+                            <option value="approved" {% if approval1_filter == 'approved' %}selected{% endif %}>✓ Sudah</option>
+                            <option value="pending" {% if approval1_filter == 'pending' %}selected{% endif %}>⧖ Belum</option>
+                        </select>
+                    </div>
+                    <div class="col-md-1">
+                        <label for="approval2" class="form-label">Approval 2</label>
+                        <select class="form-select" id="approval2" name="approval2">
+                            <option value="all" {% if approval2_filter == 'all' %}selected{% endif %}>Semua</option>
+                            <option value="approved" {% if approval2_filter == 'approved' %}selected{% endif %}>✓ Sudah</option>
+                            <option value="pending" {% if approval2_filter == 'pending' %}selected{% endif %}>⧖ Belum</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label for="date_from" class="form-label">Dari Tanggal</label>
+                        <input type="date" class="form-control" id="date_from" name="date_from" value="{{ date_from }}">
+                    </div>
+                    <div class="col-md-2">
+                        <label for="date_to" class="form-label">Sampai Tanggal</label>
+                        <input type="date" class="form-control" id="date_to" name="date_to" value="{{ date_to }}">
+                    </div>
+                    <div class="col-md-1">
+                        <label class="form-label">&nbsp;</label>
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="fas fa-search"></i> Filter
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Data Table -->
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Data Pendaftaran ({{ pendaftaran_list|length }} data)</h5>
+            </div>
+            <div class="card-body">
+                {% if pendaftaran_list %}
+                <div class="table-responsive">
+                    <table class="table table-hover table-striped">
+                        <thead>
+                            <tr>
+                                <th>No</th>
+                                <th>Nama Lengkap</th>
+                                <th>No. KTP</th>
+                                <th>Email</th>
+                                <th>Departemen</th>
+                                <th>Status</th>
+                                <th>Approval 1</th>
+                                <th>Approval 2</th>
+                                <th>Tgl Daftar</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for pendaftaran in pendaftaran_list %}
+                            <tr>
+                                <td>{{ loop.index }}</td>
+                                <td><strong>{{ pendaftaran.nama_lengkap }}</strong></td>
+                                <td>{{ pendaftaran.nomor_ktp }}</td>
+                                <td>{{ pendaftaran.alamat_email }}</td>
+                                <td>{{ pendaftaran.asal_departemen }}</td>
+                                <td>
+                                    {% if pendaftaran.status == 'pending' %}
+                                        <span class="badge bg-warning">Pending</span>
+                                    {% elif pendaftaran.status == 'approved1' %}
+                                        <span class="badge bg-info">Approval 1</span>
+                                    {% elif pendaftaran.status == 'approved2' %}
+                                        <span class="badge bg-success">Approved</span>
+                                    {% elif pendaftaran.status == 'rejected' %}
+                                        <span class="badge bg-danger">Rejected</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if pendaftaran.approval1_at %}
+                                        <small class="text-success">✓ {{ pendaftaran.approval1_at.strftime('%d/%m') }}</small>
+                                    {% else %}
+                                        <small class="text-muted">-</small>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if pendaftaran.approval2_at %}
+                                        <small class="text-success">✓ {{ pendaftaran.approval2_at.strftime('%d/%m') }}</small>
+                                    {% else %}
+                                        <small class="text-muted">-</small>
+                                    {% endif %}
+                                </td>
+                                <td>{{ pendaftaran.created_at.strftime('%d/%m/%Y %H:%M') }}</td>
+                                <td>
+                                    <button class="btn btn-sm btn-info" data-bs-toggle="modal" 
+                                            data-bs-target="#detailModal{{ pendaftaran.id }}">
+                                        <i class="fas fa-eye"></i> Detail
+                                    </button>
+                                </td>
+                            </tr>
+
+                            <!-- Modal Detail -->
+                            <div class="modal fade" id="detailModal{{ pendaftaran.id }}" tabindex="-1">
+                                <div class="modal-dialog modal-lg">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title">Detail Pendaftaran</h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <p><strong>Nama Lengkap:</strong> {{ pendaftaran.nama_lengkap }}</p>
+                                                    <p><strong>Tempat Lahir:</strong> {{ pendaftaran.tempat_lahir }}</p>
+                                                    <p><strong>Tanggal Lahir:</strong> {{ pendaftaran.tanggal_lahir.strftime('%d/%m/%Y') }}</p>
+                                                    <p><strong>No. KTP:</strong> {{ pendaftaran.nomor_ktp }}</p>
+                                                    <p><strong>Email:</strong> {{ pendaftaran.alamat_email }}</p>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <p><strong>No. Handphone:</strong> {{ pendaftaran.nomor_handphone }}</p>
+                                                    <p><strong>Departemen:</strong> {{ pendaftaran.asal_departemen }}</p>
+                                                    <p><strong>No. ID Karyawan:</strong> {{ pendaftaran.no_id_karyawan }}</p>
+                                                    <p><strong>No. Rekening:</strong> {{ pendaftaran.nomor_rekening }}</p>
+                                                    <p><strong>Bank:</strong> {{ pendaftaran.nama_bank }}</p>
+                                                </div>
+                                            </div>
+                                            <hr>
+                                            <p><strong>Alamat Rumah:</strong></p>
+                                            <p>{{ pendaftaran.alamat_rumah }}</p>
+                                            <hr>
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <p><strong>Status:</strong> 
+                                                        {% if pendaftaran.status == 'pending' %}
+                                                            <span class="badge bg-warning">Pending</span>
+                                                        {% elif pendaftaran.status == 'approved1' %}
+                                                            <span class="badge bg-info">Approval 1</span>
+                                                        {% elif pendaftaran.status == 'approved2' %}
+                                                            <span class="badge bg-success">Approved</span>
+                                                        {% elif pendaftaran.status == 'rejected' %}
+                                                            <span class="badge bg-danger">Rejected</span>
+                                                        {% endif %}
+                                                    </p>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <p><strong>Tgl Daftar:</strong> {{ pendaftaran.created_at.strftime('%d/%m/%Y %H:%M') }}</p>
+                                                </div>
+                                            </div>
+                                            {% if pendaftaran.approval1_at %}
+                                            <hr>
+                                            <p><strong>Approval 1:</strong></p>
+                                            <p>Oleh: {{ pendaftaran.approval1_user.email if pendaftaran.approval1_user else '-' }}</p>
+                                            <p>Tanggal: {{ pendaftaran.approval1_at.strftime('%d/%m/%Y %H:%M') }}</p>
+                                            <p>Catatan: {{ pendaftaran.approval1_notes or '-' }}</p>
+                                            {% endif %}
+                                            {% if pendaftaran.approval2_at %}
+                                            <hr>
+                                            <p><strong>Approval 2:</strong></p>
+                                            <p>Oleh: {{ pendaftaran.approval2_user.email if pendaftaran.approval2_user else '-' }}</p>
+                                            <p>Tanggal: {{ pendaftaran.approval2_at.strftime('%d/%m/%Y %H:%M') }}</p>
+                                            <p>Catatan: {{ pendaftaran.approval2_notes or '-' }}</p>
+                                            {% endif %}
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="alert alert-info" role="alert">
+                    <i class="fas fa-info-circle"></i> Tidak ada data yang sesuai dengan filter.
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById('exportBtn').addEventListener('click', function(e) {
+    e.preventDefault();
+    const status = '{{ status_filter }}';
+    const search = '{{ search }}';
+    const url = `{{ url_for('export_report') }}?status=${status}&search=${encodeURIComponent(search)}`;
+    window.location.href = url;
+});
+</script>
+{% endblock %}

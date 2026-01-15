@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">Dashboard Pendaftaran</h4>
+            </div>
+            <div class="card-body">
+                {% if pendaftaran %}
+                    <div class="row">
+                        <div class="col-md-8">
+                            <h5>Status Pendaftaran Anda</h5>
+                            <table class="table table-bordered">
+                                <tr>
+                                    <th>Nama Lengkap</th>
+                                    <td>{{ pendaftaran.nama_lengkap }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Status</th>
+                                    <td>
+                                        {% if pendaftaran.status == 'pending' %}
+                                            <span class="badge bg-warning">Menunggu Approval 1</span>
+                                        {% elif pendaftaran.status == 'approved1' %}
+                                            <span class="badge bg-info">Disetujui Approval 1</span>
+                                        {% elif pendaftaran.status == 'approved2' %}
+                                            <span class="badge bg-success">Disetujui Lengkap</span>
+                                        {% elif pendaftaran.status == 'rejected' %}
+                                            <span class="badge bg-danger">Ditolak</span>
+                                        {% elif pendaftaran.status == 'cancelled' %}
+                                            <span class="badge bg-secondary">Dibatalkan</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>Tanggal Pendaftaran</th>
+                                    <td>{{ pendaftaran.created_at.strftime('%d %B %Y %H:%M') }}</td>
+                                </tr>
+                                {% if pendaftaran.approval1_at %}
+                                <tr>
+                                    <th>Approval 1</th>
+                                    <td>{{ pendaftaran.approval1_at.strftime('%d %B %Y %H:%M') }}</td>
+                                </tr>
+                                {% endif %}
+                                {% if pendaftaran.approval2_at %}
+                                <tr>
+                                    <th>Approval 2</th>
+                                    <td>{{ pendaftaran.approval2_at.strftime('%d %B %Y %H:%M') }}</td>
+                                </tr>
+                                {% endif %}
+                            </table>
+                        </div>
+                        <div class="col-md-4">
+                            <h5>Dokumen</h5>
+                            <div class="list-group">
+                                {% if pendaftaran.upload_ktp %}
+                                <a href="{{ url_for('uploaded_file', filename='ktp/' + pendaftaran.upload_ktp) }}" 
+                                   class="list-group-item list-group-item-action" target="_blank">
+                                   KTP
+                                </a>
+                                {% endif %}
+                                {% if pendaftaran.upload_id_karyawan %}
+                                <a href="{{ url_for('uploaded_file', filename='id_karyawan/' + pendaftaran.upload_id_karyawan) }}" 
+                                   class="list-group-item list-group-item-action" target="_blank">
+                                   ID Karyawan
+                                </a>
+                                {% endif %}
+                                {% if pendaftaran.upload_pas_foto %}
+                                <a href="{{ url_for('uploaded_file', filename='pas_foto/' + pendaftaran.upload_pas_foto) }}" 
+                                   class="list-group-item list-group-item-action" target="_blank">
+                                   Pas Foto
+                                </a>
+                                {% endif %}
+                                {% if pendaftaran.upload_buku_tabungan %}
+                                <a href="{{ url_for('uploaded_file', filename='buku_tabungan/' + pendaftaran.upload_buku_tabungan) }}" 
+                                   class="list-group-item list-group-item-action" target="_blank">
+                                   Buku Tabungan
+                                </a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                {% else %}
+                    <div class="text-center py-5">
+                        <h5>Anda belum memiliki pendaftaran</h5>
+                        <a href="{{ url_for('register') }}" class="btn btn-primary mt-3">Daftar Sekarang</a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

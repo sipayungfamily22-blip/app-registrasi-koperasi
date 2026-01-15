@@ -1,0 +1,192 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>Manajemen Dokter & Kupon</h2>
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addDokterModal">
+                <i class="fas fa-plus"></i> Tambah Dokter
+            </button>
+        </div>
+
+        {% if dokter_list %}
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Daftar Dokter ({{ dokter_list|length }})</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>No</th>
+                                <th>Nama Dokter</th>
+                                <th>Spesialisasi</th>
+                                <th>No. Kontak</th>
+                                <th>Kupon Tersedia</th>
+                                <th>Status</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for dokter in dokter_list %}
+                            <tr>
+                                <td>{{ loop.index }}</td>
+                                <td><strong>Dr. {{ dokter.nama_dokter }}</strong></td>
+                                <td>{{ dokter.spesialisasi }}</td>
+                                <td>{{ dokter.nomor_kontak }}</td>
+                                <td>
+                                    <span class="badge {% if dokter.jumlah_kupon > 0 %}bg-success{% else %}bg-danger{% endif %}">
+                                        {{ dokter.jumlah_kupon }}
+                                    </span>
+                                </td>
+                                <td>
+                                    {% if dokter.is_active %}
+                                        <span class="badge bg-success">Aktif</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">Nonaktif</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <button class="btn btn-sm btn-info" data-bs-toggle="modal" 
+                                            data-bs-target="#editDokterModal{{ dokter.id }}">
+                                        <i class="fas fa-edit"></i> Edit
+                                    </button>
+                                    {% if dokter.is_active %}
+                                    <button class="btn btn-sm btn-danger" data-bs-toggle="modal" 
+                                            data-bs-target="#deleteDokterModal{{ dokter.id }}">
+                                        <i class="fas fa-trash"></i> Hapus
+                                    </button>
+                                    {% endif %}
+                                </td>
+                            </tr>
+
+                            <!-- Modal Edit Dokter -->
+                            <div class="modal fade" id="editDokterModal{{ dokter.id }}" tabindex="-1">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title">Edit Dokter - Dr. {{ dokter.nama_dokter }}</h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                        </div>
+                                        <form method="POST" action="{{ url_for('admin_dokter') }}">
+                                            <div class="modal-body">
+                                                <input type="hidden" name="action" value="update">
+                                                <input type="hidden" name="dokter_id" value="{{ dokter.id }}">
+                                                
+                                                <div class="mb-3">
+                                                    <label class="form-label">Nama Dokter</label>
+                                                    <input type="text" class="form-control" name="nama_dokter" 
+                                                           value="{{ dokter.nama_dokter }}" required>
+                                                </div>
+                                                
+                                                <div class="mb-3">
+                                                    <label class="form-label">No. Kontak</label>
+                                                    <input type="text" class="form-control" name="nomor_kontak" 
+                                                           value="{{ dokter.nomor_kontak }}" required>
+                                                </div>
+                                                
+                                                <div class="mb-3">
+                                                    <label class="form-label">Jumlah Kupon</label>
+                                                    <input type="number" class="form-control" name="jumlah_kupon" 
+                                                           value="{{ dokter.jumlah_kupon }}" min="0" required>
+                                                </div>
+                                                
+                                                <div class="mb-3">
+                                                    <label class="form-label">Keterangan</label>
+                                                    <textarea class="form-control" name="keterangan" rows="2">{{ dokter.keterangan or '' }}</textarea>
+                                                </div>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                                                <button type="submit" class="btn btn-primary">
+                                                    <i class="fas fa-save"></i> Simpan
+                                                </button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Modal Delete Dokter -->
+                            <div class="modal fade" id="deleteDokterModal{{ dokter.id }}" tabindex="-1">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title">Hapus Dokter</h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            <p>Apakah Anda yakin ingin menghapus Dr. {{ dokter.nama_dokter }}?</p>
+                                        </div>
+                                        <form method="POST" action="{{ url_for('admin_dokter') }}">
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                                                <button type="submit" class="btn btn-danger">
+                                                    <i class="fas fa-trash"></i> Hapus
+                                                </button>
+                                            </div>
+                                            <input type="hidden" name="action" value="delete">
+                                            <input type="hidden" name="dokter_id" value="{{ dokter.id }}">
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="alert alert-info" role="alert">
+            <i class="fas fa-info-circle"></i> Belum ada dokter yang terdaftar.
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Modal Tambah Dokter -->
+<div class="modal fade" id="addDokterModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Tambah Dokter Baru</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{{ url_for('admin_dokter') }}">
+                <div class="modal-body">
+                    <input type="hidden" name="action" value="add">
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Nama Dokter <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" name="nama_dokter" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">No. Kontak <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" name="nomor_kontak" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Jumlah Kupon <span class="text-danger">*</span></label>
+                        <input type="number" class="form-control" name="jumlah_kupon" min="0" value="0" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Keterangan</label>
+                        <textarea class="form-control" name="keterangan" rows="2"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Tambah Dokter
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
