@@ -7,7 +7,9 @@ import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 import csv
+import tempfile
 from io import StringIO, BytesIO
+from openpyxl import load_workbook
 
 from config import Config
 from database import db
@@ -98,6 +100,14 @@ def register():
                 return redirect(url_for('register'))
             
             # Get form data
+            nomor_ktp = request.form['nomor_ktp'].strip()
+            
+            # Validasi KTP tidak boleh terdaftar sebelumnya
+            existing_ktp = Pendaftaran.query.filter_by(nomor_ktp=nomor_ktp).first()
+            if existing_ktp:
+                flash('Nomor KTP ini sudah pernah terdaftar. Jika merasa ada kesalahan, hubungi administrator.', 'danger')
+                return redirect(url_for('register'))
+            
             data = {
                 'nama_lengkap': request.form['nama_lengkap'],
                 'tempat_lahir': request.form['tempat_lahir'],
@@ -105,7 +115,7 @@ def register():
                 'alamat_rumah': request.form['alamat_rumah'],
                 'nomor_handphone': request.form['nomor_handphone'],
                 'alamat_email': request.form['alamat_email'],
-                'nomor_ktp': request.form['nomor_ktp'],
+                'nomor_ktp': nomor_ktp,
                 'no_id_karyawan': request.form['no_id_karyawan'],
                 'asal_departemen': request.form['asal_departemen'],
                 'nomor_rekening': request.form['nomor_rekening'],
@@ -674,6 +684,50 @@ def approve(id):
     db.session.commit()
     return redirect(url_for('dashboard'))
 
+@app.route('/delete-pendaftaran/<int:pendaftaran_id>', methods=['POST'])
+@login_required
+def delete_pendaftaran(pendaftaran_id):
+    """Delete pendaftaran dan file uploads - hanya untuk admin"""
+    # Check authorization - only admin can delete
+    if current_user.role != 'admin':
+        flash('Anda tidak memiliki akses untuk menghapus pendaftaran', 'danger')
+        return redirect(url_for('dashboard'))
+    
+    pendaftaran = Pendaftaran.query.get_or_404(pendaftaran_id)
+    
+    # Delete files from disk
+    file_fields = ['upload_ktp', 'upload_id_karyawan', 'upload_pas_foto', 'upload_buku_tabungan']
+    folder_map = {
+        'upload_ktp': 'ktp',
+        'upload_id_karyawan': 'id_karyawan',
+        'upload_pas_foto': 'pas_foto',
+        'upload_buku_tabungan': 'buku_tabungan'
+    }
+    
+    for field in file_fields:
+        filename = getattr(pendaftaran, field, None)
+        if filename:
+            folder = folder_map[field]
+            file_path = os.path.join(app.config['UPLOAD_FOLDER'], folder, filename)
+            try:
+                if os.path.exists(file_path):
+                    os.remove(file_path)
+            except Exception as e:
+                print(f"Error deleting file {file_path}: {str(e)}")
+    
+    # Delete from database
+    try:
+        nama_lengkap = pendaftaran.nama_lengkap
+        nomor_ktp = pendaftaran.nomor_ktp
+        db.session.delete(pendaftaran)
+        db.session.commit()
+        flash(f'Pendaftaran {nama_lengkap} (KTP: {nomor_ktp}) berhasil dihapus. Nomor KTP dapat melakukan pendaftaran ulang.', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Terjadi kesalahan saat menghapus pendaftaran: {str(e)}', 'danger')
+    
+    return redirect(url_for('dashboard'))
+
 @app.route('/download/<int:pendaftaran_id>/<file_type>')
 @login_required
 def download_file(pendaftaran_id, file_type):
@@ -729,6 +783,63 @@ def download_file(pendaftaran_id, file_type):
         )
     except Exception as e:
         flash(f'Terjadi kesalahan saat mengunduh file: {str(e)}', 'danger')
+        return redirect(request.referrer or url_for('dashboard'))
+
+@app.route('/preview/<int:pendaftaran_id>/<file_type>')
+@login_required
+def preview_file(pendaftaran_id, file_type):
+    """Preview file uploaded by calon anggota"""
+    # Check authorization - only approval1, approval2, and admin can preview
+    if current_user.role not in ['approval1', 'approval2', 'admin']:
+        flash('Anda tidak memiliki akses untuk melihat file', 'danger')
+        return redirect(url_for('dashboard'))
+    
+    # Get the pendaftaran record
+    pendaftaran = Pendaftaran.query.get_or_404(pendaftaran_id)
+    
+    # Map file_type to database field
+    file_mapping = {
+        'ktp': 'upload_ktp',
+        'id_karyawan': 'upload_id_karyawan',
+        'pas_foto': 'upload_pas_foto',
+        'buku_tabungan': 'upload_buku_tabungan'
+    }
+    
+    if file_type not in file_mapping:
+        flash('Tipe file tidak valid', 'danger')
+        return redirect(request.referrer or url_for('dashboard'))
+    
+    # Get the file name from database
+    db_field = file_mapping[file_type]
+    filename = getattr(pendaftaran, db_field, None)
+    
+    if not filename:
+        flash('File tidak ditemukan', 'danger')
+        return redirect(request.referrer or url_for('dashboard'))
+    
+    # Build full file path
+    folder_map = {
+        'ktp': 'ktp',
+        'id_karyawan': 'id_karyawan',
+        'pas_foto': 'pas_foto',
+        'buku_tabungan': 'buku_tabungan'
+    }
+    
+    file_path = os.path.join(app.config['UPLOAD_FOLDER'], folder_map[file_type], filename)
+    
+    # Check if file exists
+    if not os.path.exists(file_path):
+        flash('File tidak ditemukan di server', 'danger')
+        return redirect(request.referrer or url_for('dashboard'))
+    
+    try:
+        # Return file inline for preview (not as attachment)
+        return send_file(
+            file_path,
+            as_attachment=False
+        )
+    except Exception as e:
+        flash(f'Terjadi kesalahan saat membuka file: {str(e)}', 'danger')
         return redirect(request.referrer or url_for('dashboard'))
 
 @app.route('/pendaftaran/<int:pendaftaran_id>')
@@ -1081,6 +1192,136 @@ def admin_dokter():
     dokter_list_data = Dokter.query.all()
     return render_template('admin_dokter.html', dokter_list=dokter_list_data)
 
+@app.route('/admin/dokter-upload', methods=['POST'])
+@login_required
+def admin_dokter_upload():
+    """Upload dokter data dari file Excel"""
+    if current_user.role != 'admin':
+        flash('Anda tidak memiliki akses', 'danger')
+        return redirect(url_for('dashboard'))
+    
+    try:
+        # Check if file was uploaded
+        if 'excel_file' not in request.files:
+            flash('Silakan pilih file Excel', 'danger')
+            return redirect(url_for('admin_dokter'))
+        
+        file = request.files['excel_file']
+        
+        if file.filename == '':
+            flash('Silakan pilih file Excel', 'danger')
+            return redirect(url_for('admin_dokter'))
+        
+        # Check file extension
+        if not file.filename.endswith(('.xlsx', '.xls')):
+            flash('Hanya format Excel (.xlsx, .xls) yang diizinkan', 'danger')
+            return redirect(url_for('admin_dokter'))
+        
+        # Save file temporarily
+        filename = secure_filename(file.filename)
+        temp_path = os.path.join(tempfile.gettempdir(), filename)
+        file.save(temp_path)
+        
+        # Load workbook
+        workbook = load_workbook(temp_path)
+        worksheet = workbook.active
+        
+        # Track results
+        added_count = 0
+        error_count = 0
+        errors = []
+        
+        current_month = datetime.now().strftime('%Y-%m')
+        
+        # Skip header row, start from row 2
+        for row_num, row in enumerate(worksheet.iter_rows(min_row=2, values_only=True), start=2):
+            try:
+                # Extract data from row
+                nama_dokter = row[0]
+                nomor_kontak = row[1]
+                jumlah_kupon = row[2]
+                keterangan = row[3] if len(row) > 3 else ''
+                
+                # Validasi data
+                if not nama_dokter or not nomor_kontak or jumlah_kupon is None:
+                    errors.append(f"Baris {row_num}: Nama dokter, No. kontak, dan Jumlah kupon harus diisi")
+                    error_count += 1
+                    continue
+                
+                # Convert to appropriate types
+                nama_dokter = str(nama_dokter).strip()
+                nomor_kontak = str(nomor_kontak).strip()
+                
+                try:
+                    jumlah_kupon = int(float(jumlah_kupon))
+                except (ValueError, TypeError):
+                    errors.append(f"Baris {row_num}: Jumlah kupon harus berupa angka")
+                    error_count += 1
+                    continue
+                
+                keterangan = str(keterangan).strip() if keterangan else ''
+                
+                # Check if dokter already exists (by name and contact)
+                existing = Dokter.query.filter_by(
+                    nama_dokter=nama_dokter, 
+                    nomor_kontak=nomor_kontak
+                ).first()
+                
+                if existing:
+                    errors.append(f"Baris {row_num}: Dokter '{nama_dokter}' dengan no. kontak '{nomor_kontak}' sudah terdaftar")
+                    error_count += 1
+                    continue
+                
+                # Create new dokter
+                dokter = Dokter(
+                    nama_dokter=nama_dokter,
+                    nomor_kontak=nomor_kontak,
+                    spesialisasi='-',  # Default value
+                    jumlah_kupon=jumlah_kupon,
+                    kupon_awal=jumlah_kupon,
+                    periode_berlaku_bulan=current_month,
+                    keterangan=keterangan,
+                    is_active=True
+                )
+                
+                db.session.add(dokter)
+                added_count += 1
+                
+            except Exception as e:
+                errors.append(f"Baris {row_num}: {str(e)}")
+                error_count += 1
+        
+        # Commit semua perubahan
+        try:
+            db.session.commit()
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Gagal menyimpan data: {str(e)}', 'danger')
+            return redirect(url_for('admin_dokter'))
+        finally:
+            # Delete temporary file
+            if os.path.exists(temp_path):
+                os.remove(temp_path)
+        
+        # Prepare success message
+        if added_count > 0:
+            flash(f'✓ Berhasil menambahkan {added_count} dokter', 'success')
+        
+        if error_count > 0:
+            error_msg = f'⚠ {error_count} baris gagal ditambahkan:\n' + '\n'.join(errors[:5])
+            if len(errors) > 5:
+                error_msg += f'\n... dan {len(errors) - 5} error lainnya'
+            flash(error_msg, 'warning')
+        
+        if added_count == 0 and error_count > 0:
+            return redirect(url_for('admin_dokter'))
+            
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Terjadi kesalahan saat memproses file: {str(e)}', 'danger')
+    
+    return redirect(url_for('admin_dokter'))
+
 @app.route('/kasir/dokter', methods=['GET', 'POST'])
 @login_required
 def kasir_dokter():
@@ -1385,6 +1626,166 @@ def admin_export_laporan_kupon():
         as_attachment=True,
         download_name=filename
     )
+
+@app.route('/admin/users', methods=['GET', 'POST'])
+@login_required
+def admin_users():
+    """Manage system users"""
+    if current_user.role != 'admin':
+        flash('Anda tidak memiliki akses', 'danger')
+        return redirect(url_for('dashboard'))
+    
+    if request.method == 'POST':
+        action = request.form.get('action')
+        
+        if action == 'add':
+            email = request.form.get('email', '').strip()
+            role = request.form.get('role', 'user')
+            
+            # Validasi email
+            if not email or '@' not in email:
+                flash('Email tidak valid', 'danger')
+                return redirect(url_for('admin_users'))
+            
+            # Check if user exists
+            if User.query.filter_by(email=email).first():
+                flash(f'Email {email} sudah terdaftar', 'danger')
+                return redirect(url_for('admin_users'))
+            
+            try:
+                # Generate random password
+                import secrets
+                temp_password = secrets.token_urlsafe(8)
+                
+                # Create user
+                user = User(email=email, role=role)
+                user.set_password(temp_password)
+                db.session.add(user)
+                db.session.commit()
+                
+                # Send welcome email with credentials
+                subject = f"Akun Baru - {role.upper()} | Sistem Koperasi"
+                body = f"""
+                <html>
+                <body style="font-family: Arial, sans-serif;">
+                    <h3 style="color: #1e5a96;">Selamat Datang di Sistem Koperasi!</h3>
+                    <p>Akun Anda telah dibuat oleh administrator.</p>
+                    
+                    <h4 style="color: #1e5a96; margin-top: 20px;">Informasi Login:</h4>
+                    <table style="border-collapse: collapse; width: 100%; margin-bottom: 20px;">
+                        <tr>
+                            <td style="padding: 8px; font-weight: bold; width: 30%;">Email:</td>
+                            <td style="padding: 8px; background-color: #f0f0f0; font-family: monospace;">{email}</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 8px; font-weight: bold;">Password Sementara:</td>
+                            <td style="padding: 8px; background-color: #f0f0f0; font-family: monospace;">{temp_password}</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 8px; font-weight: bold;">Role:</td>
+                            <td style="padding: 8px;">{role.upper()}</td>
+                        </tr>
+                    </table>
+                    
+                    <p style="color: #d32f2f;"><strong>⚠️ PENTING:</strong></p>
+                    <ul>
+                        <li>Gunakan email dan password di atas untuk login pertama kali</li>
+                        <li>Segera ubah password Anda setelah login</li>
+                        <li>Jangan bagikan password ini ke orang lain</li>
+                    </ul>
+                    
+                    <p style="margin-top: 20px;">
+                        <a href="http://127.0.0.1:5000/login" style="display: inline-block; background-color: #1e5a96; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Login ke Sistem</a>
+                    </p>
+                    
+                    <hr style="margin: 20px 0; border: none; border-top: 1px solid #ddd;">
+                    <p style="font-size: 12px; color: #999;">Email ini dikirim otomatis dari sistem Aplikasi Koperasi.</p>
+                </body>
+                </html>
+                """
+                
+                try:
+                    send_email(email, subject, body)
+                    flash(f'✓ User {email} berhasil ditambahkan. Email login telah dikirim.', 'success')
+                except Exception as e:
+                    flash(f'User ditambahkan tapi gagal mengirim email: {str(e)}', 'warning')
+                
+            except Exception as e:
+                db.session.rollback()
+                flash(f'Gagal menambahkan user: {str(e)}', 'danger')
+        
+        elif action == 'delete':
+            user_id = request.form.get('user_id')
+            user = User.query.get(user_id)
+            
+            if not user:
+                flash('User tidak ditemukan', 'danger')
+            elif user.id == current_user.id:
+                flash('Anda tidak bisa menghapus akun sendiri', 'danger')
+            else:
+                try:
+                    email = user.email
+                    db.session.delete(user)
+                    db.session.commit()
+                    flash(f'✓ User {email} berhasil dihapus', 'success')
+                except Exception as e:
+                    db.session.rollback()
+                    flash(f'Gagal menghapus user: {str(e)}', 'danger')
+        
+        elif action == 'reset_password':
+            user_id = request.form.get('user_id')
+            user = User.query.get(user_id)
+            
+            if not user:
+                flash('User tidak ditemukan', 'danger')
+            else:
+                try:
+                    import secrets
+                    temp_password = secrets.token_urlsafe(8)
+                    user.set_password(temp_password)
+                    db.session.commit()
+                    
+                    # Send email with new password
+                    subject = "Reset Password - Sistem Koperasi"
+                    body = f"""
+                    <html>
+                    <body style="font-family: Arial, sans-serif;">
+                        <h3 style="color: #1e5a96;">Password Anda Telah Direset</h3>
+                        <p>Administrator telah mereset password Anda.</p>
+                        
+                        <table style="border-collapse: collapse; width: 100%; margin: 20px 0;">
+                            <tr>
+                                <td style="padding: 8px; font-weight: bold;">Password Baru:</td>
+                                <td style="padding: 8px; background-color: #f0f0f0; font-family: monospace;">{temp_password}</td>
+                            </tr>
+                        </table>
+                        
+                        <p style="color: #d32f2f;"><strong>⚠️ Segera ubah password setelah login!</strong></p>
+                        
+                        <p style="margin-top: 20px;">
+                            <a href="http://127.0.0.1:5000/login" style="display: inline-block; background-color: #1e5a96; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Login</a>
+                        </p>
+                    </body>
+                    </html>
+                    """
+                    
+                    try:
+                        send_email(user.email, subject, body)
+                        flash(f'✓ Password {user.email} direset. Email telah dikirim.', 'success')
+                    except Exception as e:
+                        flash(f'Password direset tapi gagal mengirim email: {str(e)}', 'warning')
+                
+                except Exception as e:
+                    db.session.rollback()
+                    flash(f'Gagal reset password: {str(e)}', 'danger')
+        
+        return redirect(url_for('admin_users'))
+    
+    # Get all users
+    users = User.query.all()
+    role_options = ['user', 'HC', 'KaKop', 'admin', 'kasir']
+    
+    return render_template('admin_users.html', users=users, role_options=role_options, current_user_id=current_user.id)
 
 @app.route('/uploads/<path:filename>')
 @login_required

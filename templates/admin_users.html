@@ -1,0 +1,179 @@
+{% extends "base.html" %}
+
+{% block title %}Kelola User - Admin{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-12">
+            <h2 class="mb-4">
+                <i class="fas fa-users"></i> Kelola User Sistem
+            </h2>
+
+            <!-- Flash Messages -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ 'success' if category == 'success' else 'danger' if category == 'danger' else 'warning' }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <!-- Tambah User Baru -->
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-user-plus"></i> Tambah User Baru
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('admin_users') }}">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="email" class="form-label">Email</label>
+                                    <input type="email" class="form-control" id="email" name="email" 
+                                           placeholder="contoh@gmail.com" required>
+                                    <small class="text-muted">Gunakan email asli yang akan digunakan untuk login</small>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="role" class="form-label">Role/Jabatan</label>
+                                    <select class="form-select" id="role" name="role" required>
+                                        <option value="">-- Pilih Role --</option>
+                                        <option value="user">User (Calon Anggota)</option>
+                                        <option value="approval1">Approval 1</option>
+                                        <option value="approval2">Approval 2</option>
+                                        <option value="kasir">Kasir</option>
+                                        <option value="admin">Administrator</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <button type="submit" class="btn btn-primary" name="action" value="add">
+                                <i class="fas fa-plus"></i> Tambah User
+                            </button>
+                        </div>
+                        <div class="alert alert-info" role="alert">
+                            <i class="fas fa-info-circle"></i>
+                            Password otomatis digenerate dan dikirim ke email user. 
+                            User dapat mengubah password setelah login pertama.
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Daftar User -->
+            <div class="card">
+                <div class="card-header bg-secondary text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-list"></i> Daftar User ({{ users|length }})
+                    </h5>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Email</th>
+                                <th>Role</th>
+                                <th>Status</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% if users %}
+                                {% for user in users %}
+                                    <tr>
+                                        <td>
+                                            <strong>{{ user.email }}</strong>
+                                            {% if user.id == current_user_id %}
+                                                <span class="badge bg-success ms-2">Anda</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-info">{{ user.role|upper }}</span>
+                                        </td>
+                                        <td>
+                                            {% if user.is_active %}
+                                                <span class="badge bg-success">Aktif</span>
+                                            {% else %}
+                                                <span class="badge bg-secondary">Nonaktif</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <form method="POST" class="d-inline" style="display:inline;">
+                                                <input type="hidden" name="user_id" value="{{ user.id }}">
+                                                
+                                                <!-- Reset Password Button -->
+                                                <button type="submit" class="btn btn-sm btn-warning" 
+                                                        name="action" value="reset_password"
+                                                        onclick="return confirm('Reset password user {{ user.email }}?')"
+                                                        title="Reset Password">
+                                                    <i class="fas fa-key"></i> Reset
+                                                </button>
+                                                
+                                                <!-- Delete Button -->
+                                                {% if user.id != current_user_id %}
+                                                    <button type="submit" class="btn btn-sm btn-danger" 
+                                                            name="action" value="delete"
+                                                            onclick="return confirm('Hapus user {{ user.email }}? Aksi ini tidak dapat dibatalkan.')"
+                                                            title="Hapus User">
+                                                        <i class="fas fa-trash"></i> Hapus
+                                                    </button>
+                                                {% else %}
+                                                    <button type="button" class="btn btn-sm btn-danger" disabled>
+                                                        <i class="fas fa-trash"></i> Hapus
+                                                    </button>
+                                                {% endif %}
+                                            </form>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            {% else %}
+                                <tr>
+                                    <td colspan="4" class="text-center text-muted py-4">
+                                        Tidak ada user terdaftar
+                                    </td>
+                                </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Info Box -->
+            <div class="alert alert-info mt-4" role="alert">
+                <h5 class="alert-heading">
+                    <i class="fas fa-lightbulb"></i> Tips
+                </h5>
+                <ul class="mb-0">
+                    <li><strong>Tambah User:</strong> Email akan menerima password sementara secara otomatis</li>
+                    <li><strong>Reset Password:</strong> User akan menerima password baru di email mereka</li>
+                    <li><strong>Hapus User:</strong> Semua data user akan dihapus dari sistem</li>
+                    <li><strong>Email Gmail:</strong> Pastikan konfigurasi email sudah benar di .env.production</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .card {
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .btn {
+        transition: all 0.3s ease;
+    }
+    
+    .btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    }
+</style>
+{% endblock %}

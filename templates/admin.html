@@ -96,28 +96,123 @@
                                                             <label class="form-label"><strong>File yang Diupload:</strong></label>
                                                             <div class="list-group">
                                                                 {% if pendaftaran.upload_ktp %}
-                                                                <a href="{{ url_for('download_file', pendaftaran_id=pendaftaran.id, file_type='ktp') }}" class="list-group-item list-group-item-action">
-                                                                    <i class="bi bi-file-earmark-pdf"></i> KTP
-                                                                    <span class="badge bg-primary float-end">Download</span>
-                                                                </a>
+                                                                <div class="list-group-item d-flex justify-content-between align-items-center">
+                                                                    <div>
+                                                                        <i class="bi bi-file-earmark-pdf"></i> KTP
+                                                                    </div>
+                                                                    <div class="btn-group btn-group-sm" role="group">
+                                                                        <button type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#previewModal{{ pendaftaran.id }}_ktp">
+                                                                            <i class="bi bi-eye"></i> Lihat
+                                                                        </button>
+                                                                        <a href="{{ url_for('download_file', pendaftaran_id=pendaftaran.id, file_type='ktp') }}" class="btn btn-outline-primary">
+                                                                            <i class="bi bi-download"></i> Download
+                                                                        </a>
+                                                                    </div>
+                                                                </div>
+                                                                <!-- Preview Modal KTP -->
+                                                                <div class="modal fade" id="previewModal{{ pendaftaran.id }}_ktp" tabindex="-1">
+                                                                    <div class="modal-dialog modal-lg">
+                                                                        <div class="modal-content">
+                                                                            <div class="modal-header">
+                                                                                <h5 class="modal-title">Preview KTP</h5>
+                                                                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                                            </div>
+                                                                            <div class="modal-body" style="max-height: 70vh; overflow-y: auto;">
+                                                                                <iframe src="{{ url_for('preview_file', pendaftaran_id=pendaftaran.id, file_type='ktp') }}" style="width: 100%; height: 500px; border: none;"></iframe>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
                                                                 {% endif %}
+                                                                
                                                                 {% if pendaftaran.upload_id_karyawan %}
-                                                                <a href="{{ url_for('download_file', pendaftaran_id=pendaftaran.id, file_type='id_karyawan') }}" class="list-group-item list-group-item-action">
-                                                                    <i class="bi bi-file-earmark-pdf"></i> ID Karyawan
-                                                                    <span class="badge bg-primary float-end">Download</span>
-                                                                </a>
+                                                                <div class="list-group-item d-flex justify-content-between align-items-center">
+                                                                    <div>
+                                                                        <i class="bi bi-file-earmark-pdf"></i> ID Karyawan
+                                                                    </div>
+                                                                    <div class="btn-group btn-group-sm" role="group">
+                                                                        <button type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#previewModal{{ pendaftaran.id }}_id_karyawan">
+                                                                            <i class="bi bi-eye"></i> Lihat
+                                                                        </button>
+                                                                        <a href="{{ url_for('download_file', pendaftaran_id=pendaftaran.id, file_type='id_karyawan') }}" class="btn btn-outline-primary">
+                                                                            <i class="bi bi-download"></i> Download
+                                                                        </a>
+                                                                    </div>
+                                                                </div>
+                                                                <!-- Preview Modal ID Karyawan -->
+                                                                <div class="modal fade" id="previewModal{{ pendaftaran.id }}_id_karyawan" tabindex="-1">
+                                                                    <div class="modal-dialog modal-lg">
+                                                                        <div class="modal-content">
+                                                                            <div class="modal-header">
+                                                                                <h5 class="modal-title">Preview ID Karyawan</h5>
+                                                                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                                            </div>
+                                                                            <div class="modal-body" style="max-height: 70vh; overflow-y: auto;">
+                                                                                <iframe src="{{ url_for('preview_file', pendaftaran_id=pendaftaran.id, file_type='id_karyawan') }}" style="width: 100%; height: 500px; border: none;"></iframe>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
                                                                 {% endif %}
+                                                                
                                                                 {% if pendaftaran.upload_pas_foto %}
-                                                                <a href="{{ url_for('download_file', pendaftaran_id=pendaftaran.id, file_type='pas_foto') }}" class="list-group-item list-group-item-action">
-                                                                    <i class="bi bi-file-earmark-image"></i> Pas Foto
-                                                                    <span class="badge bg-primary float-end">Download</span>
-                                                                </a>
+                                                                <div class="list-group-item d-flex justify-content-between align-items-center">
+                                                                    <div>
+                                                                        <i class="bi bi-file-earmark-image"></i> Pas Foto
+                                                                    </div>
+                                                                    <div class="btn-group btn-group-sm" role="group">
+                                                                        <button type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#previewModal{{ pendaftaran.id }}_pas_foto">
+                                                                            <i class="bi bi-eye"></i> Lihat
+                                                                        </button>
+                                                                        <a href="{{ url_for('download_file', pendaftaran_id=pendaftaran.id, file_type='pas_foto') }}" class="btn btn-outline-primary">
+                                                                            <i class="bi bi-download"></i> Download
+                                                                        </a>
+                                                                    </div>
+                                                                </div>
+                                                                <!-- Preview Modal Pas Foto -->
+                                                                <div class="modal fade" id="previewModal{{ pendaftaran.id }}_pas_foto" tabindex="-1">
+                                                                    <div class="modal-dialog modal-lg">
+                                                                        <div class="modal-content">
+                                                                            <div class="modal-header">
+                                                                                <h5 class="modal-title">Preview Pas Foto</h5>
+                                                                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                                            </div>
+                                                                            <div class="modal-body" style="max-height: 70vh; overflow-y: auto;">
+                                                                                <iframe src="{{ url_for('preview_file', pendaftaran_id=pendaftaran.id, file_type='pas_foto') }}" style="width: 100%; height: 500px; border: none;"></iframe>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
                                                                 {% endif %}
+                                                                
                                                                 {% if pendaftaran.upload_buku_tabungan %}
-                                                                <a href="{{ url_for('download_file', pendaftaran_id=pendaftaran.id, file_type='buku_tabungan') }}" class="list-group-item list-group-item-action">
-                                                                    <i class="bi bi-file-earmark-pdf"></i> Buku Tabungan
-                                                                    <span class="badge bg-primary float-end">Download</span>
-                                                                </a>
+                                                                <div class="list-group-item d-flex justify-content-between align-items-center">
+                                                                    <div>
+                                                                        <i class="bi bi-file-earmark-pdf"></i> Buku Tabungan
+                                                                    </div>
+                                                                    <div class="btn-group btn-group-sm" role="group">
+                                                                        <button type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#previewModal{{ pendaftaran.id }}_buku_tabungan">
+                                                                            <i class="bi bi-eye"></i> Lihat
+                                                                        </button>
+                                                                        <a href="{{ url_for('download_file', pendaftaran_id=pendaftaran.id, file_type='buku_tabungan') }}" class="btn btn-outline-primary">
+                                                                            <i class="bi bi-download"></i> Download
+                                                                        </a>
+                                                                    </div>
+                                                                </div>
+                                                                <!-- Preview Modal Buku Tabungan -->
+                                                                <div class="modal fade" id="previewModal{{ pendaftaran.id }}_buku_tabungan" tabindex="-1">
+                                                                    <div class="modal-dialog modal-lg">
+                                                                        <div class="modal-content">
+                                                                            <div class="modal-header">
+                                                                                <h5 class="modal-title">Preview Buku Tabungan</h5>
+                                                                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                                            </div>
+                                                                            <div class="modal-body" style="max-height: 70vh; overflow-y: auto;">
+                                                                                <iframe src="{{ url_for('preview_file', pendaftaran_id=pendaftaran.id, file_type='buku_tabungan') }}" style="width: 100%; height: 500px; border: none;"></iframe>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
                                                                 {% endif %}
                                                             </div>
                                                         </div>
@@ -144,9 +239,50 @@
                                                     </div>
                                                     <div class="modal-footer">
                                                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                                                        {% if user.role == 'admin' %}
+                                                        <button type="button" class="btn btn-danger" data-bs-toggle="modal" 
+                                                                data-bs-target="#deleteModal{{ pendaftaran.id }}" 
+                                                                data-bs-dismiss="modal">
+                                                            <i class="bi bi-trash"></i> Hapus
+                                                        </button>
+                                                        {% endif %}
                                                         <button type="submit" class="btn btn-primary">Submit</button>
                                                     </div>
                                                 </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Delete Confirmation Modal -->
+                                    <div class="modal fade" id="deleteModal{{ pendaftaran.id }}" tabindex="-1">
+                                        <div class="modal-dialog">
+                                            <div class="modal-content border-danger">
+                                                <div class="modal-header bg-danger text-white">
+                                                    <h5 class="modal-title">Hapus Pendaftaran</h5>
+                                                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <p><strong>Perhatian!</strong> Anda akan menghapus data pendaftaran berikut:</p>
+                                                    <hr>
+                                                    <p><strong>Nama:</strong> {{ pendaftaran.nama_lengkap }}</p>
+                                                    <p><strong>No. KTP:</strong> {{ pendaftaran.nomor_ktp }}</p>
+                                                    <p><strong>Email:</strong> {{ pendaftaran.alamat_email }}</p>
+                                                    <hr>
+                                                    <p class="text-warning"><strong>Catatan:</strong></p>
+                                                    <ul>
+                                                        <li>Semua file yang diupload akan dihapus</li>
+                                                        <li>Nomor KTP akan dapat melakukan pendaftaran ulang</li>
+                                                        <li>Tindakan ini tidak dapat dibatalkan</li>
+                                                    </ul>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                                                    <form method="POST" action="{{ url_for('delete_pendaftaran', pendaftaran_id=pendaftaran.id) }}" style="display: inline;">
+                                                        <button type="submit" class="btn btn-danger">
+                                                            <i class="bi bi-trash"></i> Hapus Permanen
+                                                        </button>
+                                                    </form>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>

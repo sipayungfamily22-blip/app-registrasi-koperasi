@@ -64,7 +64,7 @@ class Pendaftaran(db.Model):
 class Dokter(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     nama_dokter = db.Column(db.String(200), nullable=False)
-    spesialisasi = db.Column(db.String(100), nullable=False)
+    spesialisasi = db.Column(db.String(100))
     nomor_kontak = db.Column(db.String(20), nullable=False)
     alamat_praktik = db.Column(db.Text)
     jumlah_kupon = db.Column(db.Integer, default=0)
