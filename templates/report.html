@@ -176,10 +176,16 @@
                                 </td>
                                 <td>{{ pendaftaran.created_at.strftime('%d/%m/%Y %H:%M') }}</td>
                                 <td>
-                                    <button class="btn btn-sm btn-info" data-bs-toggle="modal" 
+                                    <button class="btn btn-sm btn-info" data-bs-toggle="modal"
                                             data-bs-target="#detailModal{{ pendaftaran.id }}">
                                         <i class="fas fa-eye"></i> Detail
                                     </button>
+                                    {% if current_user.role == 'admin' %}
+                                    <button class="btn btn-sm btn-danger" data-bs-toggle="modal"
+                                            data-bs-target="#deleteModal{{ pendaftaran.id }}">
+                                        <i class="fas fa-trash"></i> Hapus
+                                    </button>
+                                    {% endif %}
                                 </td>
                             </tr>
 
@@ -247,6 +253,46 @@
                                         </div>
                                         <div class="modal-footer">
                                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Modal Delete -->
+                            <div class="modal fade" id="deleteModal{{ pendaftaran.id }}" tabindex="-1">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <div class="modal-header bg-danger text-white">
+                                            <h5 class="modal-title"><i class="fas fa-exclamation-triangle"></i> Hapus Pendaftaran</h5>
+                                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            <p class="text-danger"><strong>Peringatan:</strong> Anda akan menghapus pendaftaran berikut:</p>
+                                            <ul class="list-unstyled">
+                                                <li><strong>Nama:</strong> {{ pendaftaran.nama_lengkap }}</li>
+                                                <li><strong>No. KTP:</strong> {{ pendaftaran.nomor_ktp }}</li>
+                                                <li><strong>Email:</strong> {{ pendaftaran.alamat_email }}</li>
+                                                <li><strong>Status:</strong>
+                                                    {% if pendaftaran.status == 'pending' %}
+                                                        <span class="badge bg-warning">Pending</span>
+                                                    {% elif pendaftaran.status == 'approved1' %}
+                                                        <span class="badge bg-info">Approval 1</span>
+                                                    {% elif pendaftaran.status == 'approved2' %}
+                                                        <span class="badge bg-success">Approved</span>
+                                                    {% elif pendaftaran.status == 'rejected' %}
+                                                        <span class="badge bg-danger">Rejected</span>
+                                                    {% endif %}
+                                                </li>
+                                            </ul>
+                                            <p class="text-danger mt-3"><small>Aksi ini tidak dapat dibatalkan. Semua file dan data akan dihapus.</small></p>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                                            <form method="POST" action="{{ url_for('delete_pendaftaran', pendaftaran_id=pendaftaran.id) }}" style="display: inline;">
+                                                <button type="submit" class="btn btn-danger">
+                                                    <i class="fas fa-trash"></i> Hapus Sekarang
+                                                </button>
+                                            </form>
                                         </div>
                                     </div>
                                 </div>
