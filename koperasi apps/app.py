@@ -1,3 +1,5 @@
+from dotenv import load_dotenv
+load_dotenv()
 from flask import Flask, render_template, request, redirect, url_for, flash, send_from_directory, send_file
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 import os
@@ -12,7 +14,7 @@ from io import StringIO, BytesIO
 from openpyxl import load_workbook
 import logging
 
-from config import Config
+from config import Config, DevelopmentConfig, ProductionConfig
 from database import db
 from models import User, Pendaftaran, Dokter, PenggunaanKupon
 
@@ -21,7 +23,12 @@ template_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'te
 static_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'static'))
 
 app = Flask(__name__, template_folder=template_dir, static_folder=static_dir)
-app.config.from_object(Config)
+
+# Choose configuration based on environment
+if os.getenv('FLASK_ENV') == 'production':
+    app.config.from_object(ProductionConfig)
+else:
+    app.config.from_object(DevelopmentConfig)
 
 # Setup logging
 log_file = os.path.join(os.path.dirname(__file__), '..', app.config.get('LOG_FILE', 'logs/app.log'))

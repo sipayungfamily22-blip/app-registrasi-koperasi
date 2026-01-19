@@ -22,12 +22,12 @@ class Config:
         DB_PASSWORD = os.getenv('DB_PASSWORD', 'koperasi_pass')
         SQLALCHEMY_DATABASE_URI = f'mysql+pymysql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}'
     else:
-        # SQLite configuration (default)
+        # SQLite configuration (default) - use relative path for better portability
         _instance_path = os.path.join(os.path.dirname(__file__), 'instance')
         os.makedirs(_instance_path, exist_ok=True)
-        _db_path = os.path.abspath(os.path.join(_instance_path, 'koperasi.db'))
-        # Convert Windows path to SQLite format
-        SQLALCHEMY_DATABASE_URI = f'sqlite:///{_db_path.replace(chr(92), "/")}'
+        _db_path = os.path.join(_instance_path, 'koperasi.db')
+        # Use forward slashes for cross-platform compatibility
+        SQLALCHEMY_DATABASE_URI = f'sqlite:///{_db_path}'
     
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     
@@ -44,9 +44,10 @@ class Config:
     MAIL_PASSWORD = os.getenv('MAIL_PASSWORD', '')
     MAIL_DEFAULT_SENDER = os.getenv('MAIL_DEFAULT_SENDER', 'noreply@koperasi.local')
     
-    # Session
+    # Session configuration - adjust for production
     PERMANENT_SESSION_LIFETIME = 3600  # 1 hour
-    SESSION_COOKIE_SECURE = True
+    # Only set secure cookies if HTTPS is enabled
+    SESSION_COOKIE_SECURE = os.getenv('HTTPS_ENABLED', 'false').lower() == 'true'
     SESSION_COOKIE_HTTPONLY = True
     SESSION_COOKIE_SAMESITE = 'Lax'
     
