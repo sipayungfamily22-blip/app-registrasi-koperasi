@@ -10,6 +10,7 @@ import csv
 import tempfile
 from io import StringIO, BytesIO
 from openpyxl import load_workbook
+import logging
 
 from config import Config
 from database import db
@@ -22,6 +23,16 @@ static_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'stat
 app = Flask(__name__, template_folder=template_dir, static_folder=static_dir)
 app.config.from_object(Config)
 
+# Setup logging
+log_file = os.path.join(os.path.dirname(__file__), '..', app.config.get('LOG_FILE', 'logs/app.log'))
+os.makedirs(os.path.dirname(log_file), exist_ok=True)
+handler = logging.FileHandler(log_file)
+handler.setLevel(logging.INFO)
+formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+handler.setFormatter(formatter)
+app.logger.addHandler(handler)
+app.logger.setLevel(logging.INFO)
+
 # Initialize extensions
 db.init_app(app)
 login_manager = LoginManager()
@@ -31,6 +42,17 @@ login_manager.login_view = 'login'
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
+
+@app.before_request
+def log_request_info():
+    user_email = current_user.email if current_user.is_authenticated else 'Anonymous'
+    app.logger.info(f'API Access: {request.method} {request.path} by {user_email} from {request.remote_addr}')
+
+@app.after_request
+def log_response_info(response):
+    user_email = current_user.email if current_user.is_authenticated else 'Anonymous'
+    app.logger.info(f'API Response: {request.method} {request.path} - Status: {response.status_code} by {user_email}')
+    return response
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in app.config['ALLOWED_EXTENSIONS']
@@ -84,6 +106,7 @@ def index():
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
+        app.logger.info(f'Registration attempt from {request.form.get("alamat_email", "unknown")}')
         try:
             # Validasi checkbox persyaratan
             required_checkboxes = [
@@ -133,6 +156,7 @@ def register():
             pendaftaran = Pendaftaran(**data)
             db.session.add(pendaftaran)
             db.session.commit()
+            app.logger.info(f'Registration successful for {data["nama_lengkap"]} - ID: {pendaftaran.id}')
             
             # Send notification emails to approval1 and admin
             subject_approval1 = "Pendaftaran Calon Anggota Baru - Membutuhkan Approval 1"
@@ -239,9 +263,11 @@ def login():
         
         if user and user.check_password(password):
             login_user(user)
+            app.logger.info(f'User {email} logged in successfully')
             next_page = request.args.get('next')
             return redirect(next_page or url_for('dashboard'))
         else:
+            app.logger.warning(f'Failed login attempt for email: {email}')
             flash('Email atau password salah', 'danger')
     
     return render_template('login.html')
@@ -249,6 +275,7 @@ def login():
 @app.route('/logout')
 @login_required
 def logout():
+    app.logger.info(f'User {current_user.email} logged out')
     logout_user()
     return redirect(url_for('index'))
 
@@ -303,6 +330,7 @@ def dashboard():
 @app.route('/approve/<int:id>', methods=['POST'])
 @login_required
 def approve(id):
+    app.logger.info(f'Approval action initiated by {current_user.email} for pendaftaran ID {id}')
     if current_user.role not in ['approval1', 'approval2', 'admin']:
         flash('Anda tidak memiliki akses', 'danger')
         return redirect(url_for('dashboard'))
@@ -682,6 +710,7 @@ def approve(id):
             flash('Pendaftaran ditolak', 'warning')
     
     db.session.commit()
+    app.logger.info(f'Approval action completed by {current_user.email} for pendaftaran ID {id}: {action}')
     return redirect(url_for('dashboard'))
 
 @app.route('/delete-pendaftaran/<int:pendaftaran_id>', methods=['POST'])
