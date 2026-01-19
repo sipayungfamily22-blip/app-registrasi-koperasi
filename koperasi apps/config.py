@@ -6,17 +6,29 @@ from datetime import datetime
 dotenv_path = os.path.join(os.path.dirname(__file__), '..', '.env.production')
 load_dotenv(dotenv_path)
 
-# Setup database path with absolute path
-_instance_path = os.path.join(os.path.dirname(__file__), 'instance')
-os.makedirs(_instance_path, exist_ok=True)
-_db_path = os.path.abspath(os.path.join(_instance_path, 'koperasi.db'))
-# Convert Windows path to SQLite format
-_db_uri = f'sqlite:///{_db_path.replace(chr(92), "/")}'
-
 class Config:
     """Base configuration"""
     SECRET_KEY = os.getenv('SECRET_KEY', 'dev-secret-key-change-in-production')
-    SQLALCHEMY_DATABASE_URI = _db_uri
+    
+    # Database configuration - supports both SQLite and MySQL
+    DATABASE_TYPE = os.getenv('DATABASE_TYPE', 'sqlite')  # 'sqlite' or 'mysql'
+    
+    if DATABASE_TYPE == 'mysql':
+        # MySQL configuration
+        DB_HOST = os.getenv('DB_HOST', 'localhost')
+        DB_PORT = os.getenv('DB_PORT', '3306')
+        DB_NAME = os.getenv('DB_NAME', 'koperasi')
+        DB_USER = os.getenv('DB_USER', 'koperasi_user')
+        DB_PASSWORD = os.getenv('DB_PASSWORD', 'koperasi_pass')
+        SQLALCHEMY_DATABASE_URI = f'mysql+pymysql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}'
+    else:
+        # SQLite configuration (default)
+        _instance_path = os.path.join(os.path.dirname(__file__), 'instance')
+        os.makedirs(_instance_path, exist_ok=True)
+        _db_path = os.path.abspath(os.path.join(_instance_path, 'koperasi.db'))
+        # Convert Windows path to SQLite format
+        SQLALCHEMY_DATABASE_URI = f'sqlite:///{_db_path.replace(chr(92), "/")}'
+    
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     
     # Upload settings

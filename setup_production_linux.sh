@@ -5,6 +5,21 @@ echo "========================================="
 echo "Setup Aplikasi Koperasi - Linux Production"
 echo "========================================="
 
+# Check if Docker is available
+if command -v docker &> /dev/null && command -v docker-compose &> /dev/null; then
+    echo "🐳 Docker detected! Do you want to use Docker setup? (y/n)"
+    read -r use_docker
+
+    if [[ $use_docker =~ ^[Yy]$ ]]; then
+        echo "Using Docker setup..."
+        chmod +x docker_setup.sh
+        ./docker_setup.sh
+        exit 0
+    fi
+fi
+
+echo "Using traditional setup..."
+
 # Create virtual environment
 echo "Creating virtual environment..."
 python3 -m venv .venv
@@ -43,6 +58,6 @@ echo "========================================="
 echo ""
 echo "Next steps:"
 echo "1. Edit .env.production with your email settings"
-echo "2. Run: ./run_production.sh"
+echo "2. Run: ./run_production_linux.sh"
 echo ""
 echo "========================================="
