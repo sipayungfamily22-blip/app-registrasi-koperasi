@@ -39,9 +39,9 @@ class Config:
     SESSION_COOKIE_SAMESITE = 'Lax'
     
     # Approval emails
-    APPROVAL1_EMAIL = 'approval1@example.com'
-    APPROVAL2_EMAIL = 'approval2@example.com'
-    ADMIN_EMAIL = 'admin@example.com'
+    APPROVAL1_EMAIL = 'verifikatorkaryawan@gmail.com'
+    APPROVAL2_EMAIL = 'korpeg.shtb@gmail.com'
+    ADMIN_EMAIL = 'koperasi.karyashtb@gmail.com'
     
     # Departemen options
     DEPARTEMEN_OPTIONS = [
