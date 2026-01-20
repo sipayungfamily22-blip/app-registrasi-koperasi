@@ -138,6 +138,14 @@ def register():
                 flash('Nomor KTP ini sudah pernah terdaftar. Jika merasa ada kesalahan, hubungi administrator.', 'danger')
                 return redirect(url_for('register'))
             
+            # Handle departemen - jika Lainnya, gunakan input manual
+            asal_departemen = request.form['asal_departemen']
+            if asal_departemen == 'Lainnya':
+                asal_departemen = request.form.get('departemen_lainnya', '').strip()
+                if not asal_departemen:
+                    flash('Nama departemen lainnya tidak boleh kosong', 'danger')
+                    return redirect(url_for('register'))
+            
             data = {
                 'nama_lengkap': request.form['nama_lengkap'],
                 'tempat_lahir': request.form['tempat_lahir'],
@@ -147,7 +155,7 @@ def register():
                 'alamat_email': request.form['alamat_email'],
                 'nomor_ktp': nomor_ktp,
                 'no_id_karyawan': request.form['no_id_karyawan'],
-                'asal_departemen': request.form['asal_departemen'],
+                'asal_departemen': asal_departemen,
                 'nomor_rekening': request.form['nomor_rekening'],
                 'nama_bank': request.form['nama_bank'],
                 'pernyataan_disetujui': 'pernyataan' in request.form
@@ -869,10 +877,22 @@ def preview_file(pendaftaran_id, file_type):
         return redirect(request.referrer or url_for('dashboard'))
     
     try:
+        # Determine MIME type based on file extension
+        file_extension = os.path.splitext(filename)[1].lower()
+        mime_types = {
+            '.pdf': 'application/pdf',
+            '.png': 'image/png',
+            '.jpg': 'image/jpeg',
+            '.jpeg': 'image/jpeg',
+            '.gif': 'image/gif'
+        }
+        mime_type = mime_types.get(file_extension, 'application/octet-stream')
+        
         # Return file inline for preview (not as attachment)
         return send_file(
             file_path,
-            as_attachment=False
+            as_attachment=False,
+            mimetype=mime_type
         )
     except Exception as e:
         flash(f'Terjadi kesalahan saat membuka file: {str(e)}', 'danger')

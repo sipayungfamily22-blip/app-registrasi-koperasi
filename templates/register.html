@@ -49,12 +49,16 @@
                     <div class="row g-3">
                         <div class="col-md-6">
                             <label class="form-label">ASAL DEPARTEMEN *</label>
-                            <select class="form-select" name="asal_departemen" required>
+                            <select class="form-select" id="asal_departemen" name="asal_departemen" required onchange="toggleDepartemenLainnya()">
                                 <option value="">Pilih Departemen</option>
                                 {% for dept in departemen_options %}
                                     <option value="{{ dept }}">{{ dept }}</option>
                                 {% endfor %}
                             </select>
+                        </div>
+                        <div class="col-md-6" id="departemen_lainnya_container" style="display: none;">
+                            <label class="form-label">NAMA DEPARTEMEN LAINNYA *</label>
+                            <input type="text" class="form-control" id="departemen_lainnya_input" name="departemen_lainnya" placeholder="Masukkan nama departemen">
                         </div>
                     </div>
 
@@ -137,4 +141,33 @@
         </div>
     </div>
 </div>
+
+<script>
+function toggleDepartemenLainnya() {
+    const selectedDept = document.getElementById('asal_departemen').value;
+    const container = document.getElementById('departemen_lainnya_container');
+    const input = document.getElementById('departemen_lainnya_input');
+    
+    if (selectedDept === 'Lainnya') {
+        container.style.display = 'block';
+        input.required = true;
+    } else {
+        container.style.display = 'none';
+        input.required = false;
+        input.value = '';
+    }
+}
+
+// Validasi form sebelum submit
+document.querySelector('form').addEventListener('submit', function(e) {
+    const selectedDept = document.getElementById('asal_departemen').value;
+    const input = document.getElementById('departemen_lainnya_input');
+    
+    if (selectedDept === 'Lainnya' && input.value.trim() === '') {
+        e.preventDefault();
+        alert('Silakan masukkan nama departemen lainnya');
+        input.focus();
+    }
+});
+</script>
 {% endblock %}
