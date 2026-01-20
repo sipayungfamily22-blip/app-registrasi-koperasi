@@ -1,0 +1,24 @@
+2026-01-20 14:50:13,734 - INFO - API Access: GET / by Anonymous from 127.0.0.1
+2026-01-20 14:50:13,807 - INFO - API Response: GET / - Status: 200 by Anonymous
+2026-01-20 14:50:13,849 - INFO - API Access: GET /static/css/style.css by Anonymous from 127.0.0.1
+2026-01-20 14:50:13,852 - INFO - API Response: GET /static/css/style.css - Status: 404 by Anonymous
+2026-01-20 14:50:15,824 - INFO - API Access: GET /register by Anonymous from 127.0.0.1
+2026-01-20 14:50:15,849 - INFO - API Response: GET /register - Status: 200 by Anonymous
+2026-01-20 14:50:15,941 - INFO - API Access: GET /static/css/style.css by Anonymous from 127.0.0.1
+2026-01-20 14:50:15,942 - INFO - API Response: GET /static/css/style.css - Status: 404 by Anonymous
+2026-01-20 14:50:30,627 - INFO - API Access: GET / by Anonymous from 127.0.0.1
+2026-01-20 14:50:30,642 - INFO - API Response: GET / - Status: 200 by Anonymous
+2026-01-20 14:50:30,700 - INFO - API Access: GET /static/css/style.css by Anonymous from 127.0.0.1
+2026-01-20 14:50:30,707 - INFO - API Response: GET /static/css/style.css - Status: 404 by Anonymous
+2026-01-20 17:12:50,471 - INFO - API Access: GET / by Anonymous from 127.0.0.1
+2026-01-20 17:12:50,518 - INFO - API Response: GET / - Status: 200 by Anonymous
+2026-01-20 17:12:50,574 - INFO - API Access: GET /static/css/style.css by Anonymous from 127.0.0.1
+2026-01-20 17:12:50,576 - INFO - API Response: GET /static/css/style.css - Status: 404 by Anonymous
+2026-01-20 17:12:52,219 - INFO - API Access: GET /register by Anonymous from 127.0.0.1
+2026-01-20 17:12:52,236 - INFO - API Response: GET /register - Status: 200 by Anonymous
+2026-01-20 17:12:52,285 - INFO - API Access: GET /static/css/style.css by Anonymous from 127.0.0.1
+2026-01-20 17:12:52,290 - INFO - API Response: GET /static/css/style.css - Status: 404 by Anonymous
+2026-01-20 17:14:00,779 - INFO - API Access: GET /register by Anonymous from 127.0.0.1
+2026-01-20 17:14:00,813 - INFO - API Response: GET /register - Status: 200 by Anonymous
+2026-01-20 17:14:00,846 - INFO - API Access: GET /static/css/style.css by Anonymous from 127.0.0.1
+2026-01-20 17:14:00,848 - INFO - API Response: GET /static/css/style.css - Status: 404 by Anonymous
