@@ -1,55 +1,36 @@
-version: '3.8'
+version: "3.8"
+
+networks:
+  koperasi_network:
+    driver: bridge
 
 services:
-  mysql:
-    image: mysql:8.0
-    container_name: koperasi_mysql
+  sqlite_web:
+    image: coleifer/sqlite-web
+    container_name: koperasi_sqlite_web
     restart: unless-stopped
-    environment:
-      MYSQL_ROOT_PASSWORD: rootpassword
-      MYSQL_DATABASE: koperasi
-      MYSQL_USER: koperasi_user
-      MYSQL_PASSWORD: koperasi_pass
     ports:
-      - "3306:3306"
+      - "8081:8080"
     volumes:
-      - mysql_data:/var/lib/mysql
-      - ./docker/mysql/init:/docker-entrypoint-initdb.d
+      - ./koperasi:/data
+    command: sqlite_web /data/koperasi.db --host 0.0.0.0
     networks:
       - koperasi_network
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
-      timeout: 20s
-      retries: 10
 
   app:
     build: .
     container_name: koperasi_app
     restart: unless-stopped
     environment:
-      DATABASE_TYPE: mysql
-      DB_HOST: mysql
-      DB_PORT: 3306
-      DB_NAME: koperasi
-      DB_USER: koperasi_user
-      DB_PASSWORD: koperasi_pass
+      DATABASE_TYPE: sqlite
+      DB_PATH: /app/koperasi/koperasi.db
       FLASK_ENV: production
       FLASK_DEBUG: 0
     ports:
       - "8000:8000"
     volumes:
+      - ./koperasi:/app/koperasi
       - ./static:/app/static
       - ./logs:/app/logs
-    depends_on:
-      mysql:
-        condition: service_healthy
     networks:
       - koperasi_network
-
-volumes:
-  mysql_data:
-    driver: local
-
-networks:
-  koperasi_network:
-    driver: bridge

@@ -1,0 +1,7 @@
+logs/
+*.log
+*.md
+*.bat
+*.xlsx
+/koperasi_apps/static/uploads
+.venv

@@ -3,8 +3,11 @@ Flask-SQLAlchemy==3.0.5
 Flask-Login==0.6.3
 email-validator==2.0.0
 python-dotenv==1.0.0
-Pillow==11.0.0
+Pillow
 Werkzeug==3.0.1
 waitress==2.1.2
 gunicorn==21.2.0
 PyMySQL==1.1.0
+python-dotenv
+openpyxl
+
